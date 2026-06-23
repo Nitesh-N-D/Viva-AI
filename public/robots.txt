@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://viva-ai.example.com/sitemap.xml
+Sitemap: https://viva-ai-2cc88.web.app/sitemap.xml
