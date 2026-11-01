@@ -1,92 +1,104 @@
-[
-  {
-    "id": "groundnut",
-    "nameTa": "நிலக்கடலை",
-    "nameEn": "Groundnut",
-    "idealSoilTypes": ["செம்மண்", "லேட்டரைட் மண்"],
-    "idealRainfallMm": [25, 75],
-    "seasons": ["kharif", "summer"],
-    "growthDays": 100,
-    "stages": [
-      { "day": 0, "nameTa": "விதைப்பு", "tipTa": "நல்ல வடிகால் உள்ள மண்ணில் விதைக்கவும்" },
-      { "day": 20, "nameTa": "முளைப்பு", "tipTa": "மண் ஈரமாக இருக்க வேண்டும், அதிக நீர் தேவையில்லை" },
-      { "day": 50, "nameTa": "பூக்கும் நிலை", "tipTa": "இந்த நேரத்தில் நீர் பாய்ச்சுவது முக்கியம்" },
-      { "day": 100, "nameTa": "அறுவடை", "tipTa": "இலைகள் மஞ்சளாகும்போது அறுவடை செய்யவும்" }
-    ]
+{
+  "source": {
+    "name": "TNAU Agritech Portal — crop production guides (general requirements)",
+    "url": "https://agritech.tnau.ac.in/",
+    "note": "Broad, state-level requirements summarised for ranking only. They are not field-validated recommendations; confirm locally before sowing."
   },
-  {
-    "id": "paddy",
-    "nameTa": "நெல்",
-    "nameEn": "Paddy",
-    "idealSoilTypes": ["வண்டல் மண்", "கருமண்"],
-    "idealRainfallMm": [100, 200],
-    "seasons": ["kharif"],
-    "growthDays": 120,
-    "stages": [
-      { "day": 0, "nameTa": "நாற்று நடவு", "tipTa": "சேறு நிலையில் நடவு செய்யவும்" },
-      { "day": 30, "nameTa": "தாள் வளர்ச்சி", "tipTa": "வயலில் தண்ணீர் நிலையாக வைக்கவும்" },
-      { "day": 70, "nameTa": "கதிர் வரும் நிலை", "tipTa": "உரம் இடுவதற்கு ஏற்ற நேரம்" },
-      { "day": 120, "nameTa": "அறுவடை", "tipTa": "கதிர் தங்க நிறமாகும்போது அறுவடை செய்யவும்" }
-    ]
-  },
-  {
-    "id": "millet",
-    "nameTa": "சிறுதானியம்",
-    "nameEn": "Millet",
-    "idealSoilTypes": ["செம்மண்", "லேட்டரைட் மண்", "கருமண்"],
-    "idealRainfallMm": [15, 50],
-    "seasons": ["kharif", "rabi"],
-    "growthDays": 90,
-    "stages": [
-      { "day": 0, "nameTa": "விதைப்பு", "tipTa": "குறைந்த மழையிலும் நன்றாக வளரும்" },
-      { "day": 25, "nameTa": "முளைப்பு", "tipTa": "களைகளை அகற்றவும்" },
-      { "day": 60, "nameTa": "கதிர் வரும் நிலை", "tipTa": "பறவைகளிடமிருந்து பாதுகாக்கவும்" },
-      { "day": 90, "nameTa": "அறுவடை", "tipTa": "கதிர் உலர்ந்தவுடன் அறுவடை செய்யவும்" }
-    ]
-  },
-  {
-    "id": "blackgram",
-    "nameTa": "உளுந்து",
-    "nameEn": "Black gram",
-    "idealSoilTypes": ["வண்டல் மண்", "கருமண்"],
-    "idealRainfallMm": [30, 80],
-    "seasons": ["rabi", "summer"],
-    "growthDays": 75,
-    "stages": [
-      { "day": 0, "nameTa": "விதைப்பு", "tipTa": "ஈரப்பதம் உள்ள மண்ணில் விதைக்கவும்" },
-      { "day": 20, "nameTa": "முளைப்பு", "tipTa": "அதிக நீர் தேவையில்லை" },
-      { "day": 45, "nameTa": "பூக்கும் நிலை", "tipTa": "இலை புள்ளி நோய்க்கு கவனிக்கவும்" },
-      { "day": 75, "nameTa": "அறுவடை", "tipTa": "காய்கள் கருப்பாகும்போது அறுவடை செய்யவும்" }
-    ]
-  },
-  {
-    "id": "cotton",
-    "nameTa": "பருத்தி",
-    "nameEn": "Cotton",
-    "idealSoilTypes": ["கருமண்"],
-    "idealRainfallMm": [60, 120],
-    "seasons": ["kharif"],
-    "growthDays": 150,
-    "stages": [
-      { "day": 0, "nameTa": "விதைப்பு", "tipTa": "கருமண் சிறந்தது, நல்ல வடிகால் தேவை" },
-      { "day": 40, "nameTa": "செடி வளர்ச்சி", "tipTa": "பூச்சி கண்காணிப்பு தொடங்கவும்" },
-      { "day": 90, "nameTa": "பூ மற்றும் காய்", "tipTa": "வேப்பெண்ணெய் தெளிப்பு பயனுள்ளது" },
-      { "day": 150, "nameTa": "அறுவடை", "tipTa": "பருத்தி வெடித்தவுடன் பறிக்கவும்" }
-    ]
-  },
-  {
-    "id": "vegetables",
-    "nameTa": "காய்கறிகள் (தக்காளி/வெண்டை)",
-    "nameEn": "Vegetables (tomato/okra)",
-    "idealSoilTypes": ["வண்டல் மண்", "செம்மண்"],
-    "idealRainfallMm": [40, 100],
-    "seasons": ["rabi", "summer", "kharif"],
-    "growthDays": 65,
-    "stages": [
-      { "day": 0, "nameTa": "நாற்று நடவு", "tipTa": "தினமும் இலேசான நீர் தேவை" },
-      { "day": 20, "nameTa": "செடி வளர்ச்சி", "tipTa": "சாணி உரம் இடவும்" },
-      { "day": 40, "nameTa": "பூ மற்றும் காய்", "tipTa": "மஞ்சள் தூள் தெளித்து பூச்சி தடுக்கவும்" },
-      { "day": 65, "nameTa": "அறுவடை", "tipTa": "வாரத்திற்கு இரண்டு முறை அறுவடை செய்யலாம்" }
-    ]
-  }
-]
+  "crops": [
+    {
+      "id": "paddy",
+      "en": "Paddy (rice)",
+      "ta": "நெல்",
+      "soils": ["alluvial", "black"],
+      "seasons": ["kharif", "rabi"],
+      "water": "high",
+      "phMin": 5.5,
+      "phMax": 7.5,
+      "durationDays": 120
+    },
+    {
+      "id": "groundnut",
+      "en": "Groundnut",
+      "ta": "நிலக்கடலை",
+      "soils": ["red", "laterite", "alluvial"],
+      "seasons": ["kharif", "rabi", "summer"],
+      "water": "medium",
+      "phMin": 6.0,
+      "phMax": 7.5,
+      "durationDays": 105
+    },
+    {
+      "id": "cotton",
+      "en": "Cotton",
+      "ta": "பருத்தி",
+      "soils": ["black", "alluvial"],
+      "seasons": ["kharif", "rabi"],
+      "water": "medium",
+      "phMin": 6.0,
+      "phMax": 8.0,
+      "durationDays": 160
+    },
+    {
+      "id": "blackgram",
+      "en": "Black gram (urad)",
+      "ta": "உளுந்து",
+      "soils": ["alluvial", "black", "red"],
+      "seasons": ["kharif", "rabi", "summer"],
+      "water": "low",
+      "phMin": 6.5,
+      "phMax": 7.8,
+      "durationDays": 70
+    },
+    {
+      "id": "pearl_millet",
+      "en": "Pearl millet (cumbu)",
+      "ta": "கம்பு",
+      "soils": ["red", "laterite", "black"],
+      "seasons": ["kharif", "summer"],
+      "water": "low",
+      "phMin": 6.0,
+      "phMax": 8.0,
+      "durationDays": 90
+    },
+    {
+      "id": "maize",
+      "en": "Maize",
+      "ta": "மக்காச்சோளம்",
+      "soils": ["alluvial", "red", "black"],
+      "seasons": ["kharif", "rabi", "summer"],
+      "water": "medium",
+      "phMin": 5.5,
+      "phMax": 7.5,
+      "durationDays": 105
+    },
+    {
+      "id": "tomato",
+      "en": "Tomato",
+      "ta": "தக்காளி",
+      "soils": ["red", "alluvial"],
+      "seasons": ["kharif", "rabi"],
+      "water": "medium",
+      "phMin": 6.0,
+      "phMax": 7.0,
+      "durationDays": 135
+    },
+    {
+      "id": "ragi",
+      "en": "Finger millet (ragi)",
+      "ta": "கேழ்வரகு",
+      "soils": ["red", "laterite", "alluvial"],
+      "seasons": ["kharif", "rabi"],
+      "water": "low",
+      "phMin": 5.0,
+      "phMax": 8.0,
+      "durationDays": 110
+    }
+  ],
+  "stages": [
+    { "id": "establishment", "fromFraction": 0, "en": "Germination and establishment", "ta": "முளைப்பு மற்றும் நிலைப்படுதல்" },
+    { "id": "vegetative", "fromFraction": 0.15, "en": "Vegetative growth", "ta": "தழை வளர்ச்சி" },
+    { "id": "flowering", "fromFraction": 0.45, "en": "Flowering", "ta": "பூக்கும் பருவம்" },
+    { "id": "filling", "fromFraction": 0.65, "en": "Grain / pod / fruit filling", "ta": "மணி / காய் பிடிக்கும் பருவம்" },
+    { "id": "maturity", "fromFraction": 0.85, "en": "Maturity and harvest", "ta": "முதிர்ச்சி மற்றும் அறுவடை" }
+  ]
+}

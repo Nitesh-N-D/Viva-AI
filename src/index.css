@@ -3,21 +3,32 @@
 @tailwind utilities;
 
 :root {
-  font-family: "Noto Sans Tamil", "Noto Sans", sans-serif;
+  font-family: "Noto Sans Tamil", "Noto Sans", system-ui, sans-serif;
+  color: #2e2114;
+  background: #fbf8f2;
 }
 
 body {
   margin: 0;
   -webkit-tap-highlight-color: transparent;
+  background: #fbf8f2;
 }
 
-/* Every interactive element gets a visible focus ring — many users will
-   navigate with basic Android accessibility tools, not just touch. */
-button:focus-visible,
-a:focus-visible,
-[role="button"]:focus-visible {
+/* Visible focus ring on every interactive element (keyboard + switch access). */
+:focus-visible {
   outline: 3px solid #e0823d;
   outline-offset: 2px;
+}
+
+.leaflet-container :focus-visible {
+  outline-offset: 0;
+}
+
+/* Leaflet popups: match the app's typography. */
+.leaflet-popup-content {
+  font-family: inherit;
+  margin: 12px 14px;
+  min-width: 220px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -26,5 +37,12 @@ a:focus-visible,
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
   }
 }

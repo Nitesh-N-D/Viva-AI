@@ -20,3 +20,20 @@ functions/node_modules
 
 # OS
 .DS_Store
+
+# Build artefacts emitted by tsc -b
+vite.config.js
+vite.config.d.ts
+*.tsbuildinfo
+
+# Local tool state
+.serena/
+
+# ML training artefacts (kept in cloud storage)
+*.h5
+*.keras
+*.ckpt
+datasets/
+models-rollback/
+public/models/.*_model.staging/
+downloads/

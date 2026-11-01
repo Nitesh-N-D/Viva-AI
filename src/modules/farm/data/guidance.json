@@ -1,0 +1,354 @@
+{
+  "references": [
+    {
+      "en": "TNAU Agritech Portal — crop protection",
+      "ta": "TNAU வேளாண் தொழில்நுட்ப இணையதளம் — பயிர் பாதுகாப்பு",
+      "url": "https://agritech.tnau.ac.in/"
+    },
+    {
+      "en": "Kisan Call Centre (toll-free): 1800-180-1551",
+      "ta": "கிசான் அழைப்பு மையம் (கட்டணமில்லா): 1800-180-1551",
+      "url": "tel:18001801551"
+    }
+  ],
+  "conditions": {
+    "tomato_healthy": {
+      "severity": "none",
+      "symptoms": {
+        "en": [
+          "Leaves are evenly green with no spots, curling or wilting."
+        ],
+        "ta": [
+          "இலைகள் புள்ளிகள், சுருள் அல்லது வாடல் இல்லாமல் சீரான பச்சை நிறத்தில் உள்ளன."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Keep checking a few plants across the field every week, including the undersides of lower leaves.",
+          "Water at the base of the plant rather than over the leaves."
+        ],
+        "ta": [
+          "ஒவ்வொரு வாரமும் வயலின் பல இடங்களில் சில செடிகளை, கீழ் இலைகளின் அடிப்பகுதி உட்பட, பார்வையிடுங்கள்.",
+          "இலைகள் மேல் அல்லாமல் செடியின் அடியில் தண்ணீர் பாய்ச்சுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Rotate with non-tomato-family crops and remove crop debris after harvest."
+        ],
+        "ta": [
+          "தக்காளி குடும்பம் அல்லாத பயிர்களுடன் பயிர் சுழற்சி செய்து, அறுவடைக்குப் பின் பயிர் கழிவுகளை அகற்றுங்கள்."
+        ]
+      }
+    },
+    "tomato_early_blight": {
+      "severity": "moderate",
+      "symptoms": {
+        "en": [
+          "Brown spots with rings inside them (like a target), first on older, lower leaves.",
+          "Leaf tissue around the spots turns yellow; badly affected leaves dry and drop."
+        ],
+        "ta": [
+          "பழைய, கீழ் இலைகளில் முதலில் தோன்றும், உள்ளே வளையங்கள் கொண்ட (இலக்கு போன்ற) பழுப்பு நிறப் புள்ளிகள்.",
+          "புள்ளிகளைச் சுற்றியுள்ள பகுதி மஞ்சளாகும்; அதிகம் பாதித்த இலைகள் காய்ந்து உதிரும்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Pick off affected lower leaves and remove them from the field; do not leave them on the ground.",
+          "Avoid overhead watering and water early in the day so leaves dry quickly.",
+          "Stake or support plants so leaves do not touch the soil.",
+          "Before using any fungicide, ask your agricultural extension officer which product and dose are approved for tomato."
+        ],
+        "ta": [
+          "பாதிக்கப்பட்ட கீழ் இலைகளைப் பறித்து வயலுக்கு வெளியே அகற்றுங்கள்; தரையில் விட வேண்டாம்.",
+          "இலைகள் மேல் தண்ணீர் தெளிப்பதைத் தவிர்த்து, இலைகள் விரைவில் காயும்படி காலையில் நீர் பாய்ச்சுங்கள்.",
+          "இலைகள் மண்ணைத் தொடாதபடி செடிகளுக்குக் குச்சி அல்லது ஆதரவு கொடுங்கள்.",
+          "எந்த பூஞ்சைக்கொல்லியையும் பயன்படுத்தும் முன், தக்காளிக்கு அனுமதிக்கப்பட்ட மருந்து மற்றும் அளவை உங்கள் வேளாண் விரிவாக்க அலுவலரிடம் கேளுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Do not grow tomato, chilli, brinjal or potato in the same plot season after season.",
+          "Use healthy seedlings and clear crop debris after harvest."
+        ],
+        "ta": [
+          "ஒரே நிலத்தில் தொடர்ந்து தக்காளி, மிளகாய், கத்தரி அல்லது உருளைக்கிழங்கு பயிரிட வேண்டாம்.",
+          "ஆரோக்கியமான நாற்றுகளைப் பயன்படுத்தி, அறுவடைக்குப் பின் பயிர் கழிவுகளை அகற்றுங்கள்."
+        ]
+      }
+    },
+    "tomato_late_blight": {
+      "severity": "high",
+      "symptoms": {
+        "en": [
+          "Large, irregular, dark water-soaked patches on leaves and stems.",
+          "In cool, humid weather a white mould may appear on the underside of leaves; it can spread through a field within days."
+        ],
+        "ta": [
+          "இலைகள் மற்றும் தண்டுகளில் பெரிய, ஒழுங்கற்ற, கருமையான நீர்க்கோர்த்த திட்டுகள்.",
+          "குளிர்ந்த, ஈரப்பதமான காலநிலையில் இலைகளின் அடியில் வெள்ளை பூஞ்சை தோன்றலாம்; சில நாட்களில் வயல் முழுவதும் பரவக்கூடும்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Contact your agricultural extension office quickly — this disease can spread fast.",
+          "Remove badly affected plants, bag them and take them out of the field. Do not compost them.",
+          "Avoid wetting the leaves and avoid working among plants while they are wet."
+        ],
+        "ta": [
+          "உடனே உங்கள் வேளாண் விரிவாக்க அலுவலகத்தைத் தொடர்பு கொள்ளுங்கள் — இந்த நோய் வேகமாகப் பரவும்.",
+          "அதிகம் பாதித்த செடிகளைப் பிடுங்கி, பையில் இட்டு வயலுக்கு வெளியே கொண்டு செல்லுங்கள். உரமாக்க வேண்டாம்.",
+          "இலைகளை நனைப்பதைத் தவிர்த்து, செடிகள் ஈரமாக இருக்கும்போது அவற்றுக்கிடையே வேலை செய்வதைத் தவிருங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Give enough spacing for air movement and do not plant next to potato.",
+          "Ask about tolerant varieties suited to your area."
+        ],
+        "ta": [
+          "காற்றோட்டத்துக்குப் போதுமான இடைவெளி விடுங்கள்; உருளைக்கிழங்கு அருகில் பயிரிட வேண்டாம்.",
+          "உங்கள் பகுதிக்கு ஏற்ற தாங்கும் திறன் கொண்ட ரகங்களைப் பற்றிக் கேளுங்கள்."
+        ]
+      }
+    },
+    "tomato_bacterial_spot": {
+      "severity": "moderate",
+      "symptoms": {
+        "en": [
+          "Small, dark, greasy-looking spots on leaves, sometimes with a yellow edge.",
+          "Raised, rough spots may appear on fruit."
+        ],
+        "ta": [
+          "இலைகளில் சிறிய, கருமையான, எண்ணெய் படிந்தது போன்ற புள்ளிகள்; சில நேரம் மஞ்சள் விளிம்புடன்.",
+          "பழங்களில் மேடான, சொரசொரப்பான புள்ளிகள் தோன்றலாம்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Remove affected leaves and take them out of the field.",
+          "Do not handle plants when they are wet; clean tools after working in affected rows.",
+          "Ask your extension officer before using any spray."
+        ],
+        "ta": [
+          "பாதிக்கப்பட்ட இலைகளை அகற்றி வயலுக்கு வெளியே கொண்டு செல்லுங்கள்.",
+          "செடிகள் ஈரமாக இருக்கும்போது தொட வேண்டாம்; பாதித்த வரிசைகளில் வேலை செய்த பின் கருவிகளைச் சுத்தம் செய்யுங்கள்.",
+          "எந்த தெளிப்பையும் பயன்படுத்தும் முன் விரிவாக்க அலுவலரிடம் கேளுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Use disease-free seed and seedlings, rotate crops, and avoid overhead irrigation."
+        ],
+        "ta": [
+          "நோயற்ற விதை மற்றும் நாற்றுகளைப் பயன்படுத்தி, பயிர் சுழற்சி செய்து, மேல்நீர்ப் பாசனத்தைத் தவிருங்கள்."
+        ]
+      }
+    },
+    "tomato_septoria_leaf_spot": {
+      "severity": "moderate",
+      "symptoms": {
+        "en": [
+          "Many small round spots with dark edges and grey or light-brown centres, starting on lower leaves.",
+          "Tiny black dots may be visible in the centre of the spots."
+        ],
+        "ta": [
+          "கீழ் இலைகளில் தொடங்கி, கருமையான விளிம்பும் சாம்பல் அல்லது வெளிர் பழுப்பு மையமும் கொண்ட பல சிறிய வட்டப் புள்ளிகள்.",
+          "புள்ளிகளின் மையத்தில் மிகச் சிறிய கருப்புப் புள்ளிகள் தெரியலாம்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Remove spotted lower leaves and take them out of the field.",
+          "Mulch the soil surface to reduce splashing, and water at the base.",
+          "Consult your extension officer before using any fungicide."
+        ],
+        "ta": [
+          "புள்ளிகள் உள்ள கீழ் இலைகளை அகற்றி வயலுக்கு வெளியே கொண்டு செல்லுங்கள்.",
+          "மண் தெறிப்பதைக் குறைக்க மூடாக்கு இடுங்கள்; செடியின் அடியில் நீர் பாய்ச்சுங்கள்.",
+          "எந்த பூஞ்சைக்கொல்லியையும் பயன்படுத்தும் முன் விரிவாக்க அலுவலரை அணுகுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Rotate crops, remove crop debris and control weeds of the tomato family."
+        ],
+        "ta": [
+          "பயிர் சுழற்சி செய்து, பயிர் கழிவுகளை அகற்றி, தக்காளி குடும்பக் களைகளைக் கட்டுப்படுத்துங்கள்."
+        ]
+      }
+    },
+    "tomato_yellow_leaf_curl_virus": {
+      "severity": "high",
+      "symptoms": {
+        "en": [
+          "Leaves curl upward, turn yellow at the edges and stay small.",
+          "Plants are stunted and drop flowers. The virus is spread by whiteflies."
+        ],
+        "ta": [
+          "இலைகள் மேல்நோக்கிச் சுருண்டு, ஓரங்களில் மஞ்சளாகி, சிறியதாகவே இருக்கும்.",
+          "செடிகள் வளர்ச்சி குன்றி பூக்கள் உதிரும். இந்த வைரஸ் வெள்ளை ஈக்களால் பரவுகிறது."
+        ]
+      },
+      "steps": {
+        "en": [
+          "There is no cure for an infected plant. Pull out infected plants early, bag them and remove them from the field.",
+          "Use yellow sticky traps to monitor whiteflies.",
+          "Ask your extension officer about whitefly management suitable for your field."
+        ],
+        "ta": [
+          "பாதிக்கப்பட்ட செடியைக் குணப்படுத்த முடியாது. தொடக்கத்திலேயே அவற்றைப் பிடுங்கி, பையில் இட்டு வயலுக்கு வெளியே அகற்றுங்கள்.",
+          "வெள்ளை ஈக்களைக் கண்காணிக்க மஞ்சள் ஒட்டும் பொறிகளைப் பயன்படுத்துங்கள்.",
+          "உங்கள் வயலுக்கு ஏற்ற வெள்ளை ஈ மேலாண்மை பற்றி விரிவாக்க அலுவலரிடம் கேளுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Raise seedlings under insect-proof net and ask about tolerant hybrids.",
+          "Remove weeds that host whiteflies and avoid planting next to infected fields."
+        ],
+        "ta": [
+          "பூச்சி புகா வலையின் கீழ் நாற்றுகளை வளர்த்து, தாங்கும் திறன் கொண்ட வீரிய ரகங்களைப் பற்றிக் கேளுங்கள்.",
+          "வெள்ளை ஈக்கள் தங்கும் களைகளை அகற்றி, பாதிக்கப்பட்ட வயல்களின் அருகில் பயிரிடுவதைத் தவிருங்கள்."
+        ]
+      }
+    },
+    "tomato_leaf_mold": {
+      "severity": "moderate",
+      "symptoms": {
+        "en": [
+          "Pale green or yellow patches on the upper side of older leaves.",
+          "Olive-green to brown velvety mould on the underside, directly below the patches."
+        ],
+        "ta": [
+          "முதிர்ந்த இலைகளின் மேல்பரப்பில் வெளிர் பச்சை அல்லது மஞ்சள் திட்டுகள்.",
+          "அதே திட்டுகளுக்குக் கீழே இலையின் அடிப்பரப்பில் ஆலிவ் பச்சை முதல் பழுப்பு நிற வெல்வெட் போன்ற பூஞ்சை."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Remove badly affected leaves and take them out of the field.",
+          "Improve air movement: wider spacing, pruning and ventilation in protected structures.",
+          "Water at the base of the plant, not over the leaves.",
+          "Consult your extension officer before using any fungicide."
+        ],
+        "ta": [
+          "அதிகம் பாதித்த இலைகளை அகற்றி வயலுக்கு வெளியே கொண்டு செல்லுங்கள்.",
+          "காற்றோட்டத்தை அதிகரியுங்கள்: இடைவெளி, கவாத்து, பசுமைக்குடில் காற்றோட்டம்.",
+          "இலைகள் மேல் அல்லாமல் செடியின் அடியில் நீர் பாய்ச்சுங்கள்.",
+          "எந்த பூஞ்சைக்கொல்லியையும் பயன்படுத்தும் முன் விரிவாக்க அலுவலரை அணுகுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Keep humidity low, avoid wet foliage overnight and remove crop debris after harvest."
+        ],
+        "ta": [
+          "ஈரப்பதத்தைக் குறைவாக வைத்திருங்கள், இரவில் இலைகள் ஈரமாக இருப்பதைத் தவிருங்கள், அறுவடைக்குப் பின் பயிர் கழிவுகளை அகற்றுங்கள்."
+        ]
+      }
+    },
+    "tomato_spider_mites": {
+      "severity": "moderate",
+      "symptoms": {
+        "en": [
+          "Fine yellow or white speckles on leaves; leaves later turn bronze and dry.",
+          "Very fine webbing and tiny moving dots on the underside of leaves, usually in hot, dry weather."
+        ],
+        "ta": [
+          "இலைகளில் நுண்ணிய மஞ்சள் அல்லது வெள்ளைப் புள்ளிகள்; பின்னர் இலைகள் வெண்கல நிறமாகி காய்ந்துவிடும்.",
+          "வெப்பமான, வறண்ட காலத்தில் இலையின் அடிப்பரப்பில் மெல்லிய வலைகளும் நகரும் சிறு புள்ளிகளும் காணப்படும்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "This is a pest (mite), not a disease. Check leaf undersides with a hand lens to confirm.",
+          "Remove heavily infested leaves.",
+          "A strong spray of plain water on leaf undersides can reduce mite numbers.",
+          "Consult your extension officer before using any acaricide."
+        ],
+        "ta": [
+          "இது நோய் அல்ல, பூச்சி (சிலந்திப் பேன்). உறுதி செய்ய இலையின் அடிப்பரப்பை உருப்பெருக்கியால் பாருங்கள்.",
+          "அதிகம் தாக்கப்பட்ட இலைகளை அகற்றுங்கள்.",
+          "இலையின் அடிப்பரப்பில் வெறும் நீரை வேகமாகத் தெளிப்பது பேன்களைக் குறைக்க உதவும்.",
+          "எந்த சிலந்திக்கொல்லியையும் பயன்படுத்தும் முன் விரிவாக்க அலுவலரை அணுகுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Avoid water stress, control weeds around the field and inspect plants regularly in dry spells."
+        ],
+        "ta": [
+          "நீர்ப் பற்றாக்குறையைத் தவிருங்கள், வயலைச் சுற்றியுள்ள களைகளைக் கட்டுப்படுத்துங்கள், வறண்ட காலத்தில் செடிகளை அடிக்கடி பாருங்கள்."
+        ]
+      }
+    },
+    "tomato_target_spot": {
+      "severity": "moderate",
+      "symptoms": {
+        "en": [
+          "Brown spots with light and dark concentric rings, sometimes with a yellow border.",
+          "Spots can merge and also appear on stems and fruit."
+        ],
+        "ta": [
+          "ஒளி மற்றும் இருண்ட வளையங்கள் கொண்ட பழுப்பு நிறப் புள்ளிகள்; சில நேரம் மஞ்சள் விளிம்புடன்.",
+          "புள்ளிகள் ஒன்றிணைந்து தண்டிலும் பழத்திலும் தோன்றலாம்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "Remove affected lower leaves and take them out of the field.",
+          "Improve air flow and avoid overhead irrigation.",
+          "Target spot can look like early blight; ask your extension officer to confirm before any spray."
+        ],
+        "ta": [
+          "பாதித்த கீழ் இலைகளை அகற்றி வயலுக்கு வெளியே கொண்டு செல்லுங்கள்.",
+          "காற்றோட்டத்தை அதிகரித்து, மேலிருந்து நீர் பாய்ச்சுவதைத் தவிருங்கள்.",
+          "இது முன் இலைக்கருகல் போலத் தோன்றலாம்; எந்த மருந்து தெளிப்பதற்கும் முன் விரிவாக்க அலுவலரிடம் உறுதி செய்யுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Rotate crops and remove crop debris after harvest."
+        ],
+        "ta": [
+          "பயிர் சுழற்சி செய்து, அறுவடைக்குப் பின் பயிர் கழிவுகளை அகற்றுங்கள்."
+        ]
+      }
+    },
+    "tomato_mosaic_virus": {
+      "severity": "high",
+      "symptoms": {
+        "en": [
+          "Light- and dark-green mottling (mosaic) on leaves.",
+          "Leaves may be curled, narrow or distorted; plants may be stunted with poor fruit set."
+        ],
+        "ta": [
+          "இலைகளில் வெளிர் மற்றும் அடர் பச்சை திட்டுத் திட்டான தேமல்.",
+          "இலைகள் சுருண்டு, குறுகி அல்லது உருக்குலைந்து இருக்கலாம்; செடி வளர்ச்சி குன்றி காய்ப்பு குறையலாம்."
+        ]
+      },
+      "steps": {
+        "en": [
+          "There is no cure for a virus-infected plant. Pull out and destroy clearly infected plants.",
+          "The virus spreads by touch and tools: wash hands and clean tools after handling infected plants.",
+          "Contact your extension officer to confirm the diagnosis."
+        ],
+        "ta": [
+          "வைரஸ் தாக்கிய செடிக்கு மருந்து இல்லை. தெளிவாகப் பாதித்த செடிகளைப் பிடுங்கி அழியுங்கள்.",
+          "இந்த வைரஸ் தொடுதல் மற்றும் கருவிகள் மூலம் பரவும்: பாதித்த செடிகளைத் தொட்ட பின் கைகளையும் கருவிகளையும் கழுவுங்கள்.",
+          "நோயை உறுதி செய்ய விரிவாக்க அலுவலரைத் தொடர்பு கொள்ளுங்கள்."
+        ]
+      },
+      "prevention": {
+        "en": [
+          "Use certified seed or resistant varieties and avoid handling plants after using tobacco."
+        ],
+        "ta": [
+          "சான்றளிக்கப்பட்ட விதை அல்லது எதிர்ப்புத் திறன் கொண்ட ரகங்களைப் பயன்படுத்துங்கள்; புகையிலை பயன்படுத்திய பின் செடிகளைத் தொடாதீர்கள்."
+        ]
+      }
+    }
+  }
+}

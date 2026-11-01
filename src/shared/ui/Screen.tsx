@@ -1,48 +1,52 @@
 import React from "react";
 import { voiceEngine } from "../voice/VoiceEngine";
-import { t, useLangStore } from "../../i18n";
+import { useT } from "../../i18n";
 
 interface ScreenProps {
   title: string;
-  speakText?: string; // full narration for this screen, read aloud on demand
+  subtitle?: string;
+  /** Narration for the "read aloud" button; omit to hide the button. */
+  speakText?: string;
   onBack?: () => void;
+  actions?: React.ReactNode;
   children: React.ReactNode;
+  wide?: boolean;
 }
 
-// Every screen gets: a back button, a persistent "speak this screen"
-// control, and an offline banner when relevant — per UI/UX guidelines.
-export function Screen({ title, speakText, onBack, children }: ScreenProps) {
-  const lang = useLangStore((s) => s.lang);
-  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
-
+/** Page header + content column used by every screen inside the AppShell. */
+export function Screen({ title, subtitle, speakText, onBack, actions, children, wide }: ScreenProps) {
+  const { t, lang } = useT();
   return (
-    <div className="min-h-screen bg-soil-50 flex flex-col">
-      <header className="flex items-center justify-between p-4 bg-leaf-600 text-white">
-        {onBack ? (
-          <button onClick={onBack} className="text-2xl px-2" aria-label={t("common.back")}>
+    <div className={`mx-auto w-full ${wide ? "max-w-6xl" : "max-w-3xl"} px-4 pb-6`}>
+      <div className="flex items-start gap-2 pt-4 pb-3">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="min-w-[44px] min-h-[44px] -ml-2 rounded-tile text-xl text-soil-700 hover:bg-soil-100"
+            aria-label={t("common.back")}
+          >
             ←
           </button>
-        ) : (
-          <span className="w-8" />
         )}
-        <h1 className="font-display font-bold text-xl">{title}</h1>
-        <button
-          onClick={() => speakText && voiceEngine.speak(speakText, lang)}
-          className="text-2xl px-2"
-          aria-label={t("common.speakScreen")}
-          title={t("common.speakScreen")}
-        >
-          🔊
-        </button>
-      </header>
-
-      {isOffline && (
-        <div className="bg-ember-400/20 text-ember-600 text-center text-sm py-1">
-          {t("common.offline")}
+        <div className="flex-1 min-w-0">
+          <h1 className="font-display font-bold text-2xl text-soil-900 leading-tight">{title}</h1>
+          {subtitle && <p className="text-sm text-soil-600 mt-0.5">{subtitle}</p>}
         </div>
-      )}
-
-      <main className="flex-1 p-4">{children}</main>
+        {actions}
+        {speakText && voiceEngine.canSpeak() && (
+          <button
+            type="button"
+            onClick={() => void voiceEngine.speak(speakText, lang)}
+            className="min-w-[44px] min-h-[44px] rounded-tile text-xl hover:bg-soil-100"
+            aria-label={t("common.speakScreen")}
+            title={t("common.speakScreen")}
+          >
+            <span aria-hidden="true">🔊</span>
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-4">{children}</div>
     </div>
   );
 }

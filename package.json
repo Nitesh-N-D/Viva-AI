@@ -7,24 +7,30 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc -b",
+    "model:import": "vite-node scripts/import-model.ts import",
+    "model:rollback": "vite-node scripts/import-model.ts rollback",
+    "train:cloud": "node scripts/cloud-train.mjs",
+    "notebooks:build": "node scripts/build-notebooks.mjs"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "zustand": "^4.5.2",
+    "@tensorflow/tfjs": "^4.20.0",
+    "firebase": "^10.12.2",
     "idb": "^8.0.0",
     "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
-    "firebase": "^10.12.2",
-    "@tensorflow/tfjs": "^4.20.0"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/leaflet": "^1.9.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/leaflet": "^1.9.12",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "fake-indexeddb": "^6.0.0",
     "jsdom": "^24.1.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",

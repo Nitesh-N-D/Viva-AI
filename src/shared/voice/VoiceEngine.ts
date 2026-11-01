@@ -1,66 +1,99 @@
 /**
  * shared/voice/VoiceEngine.ts
  *
- * Section 7.1 of the spec: a single interface (`listen` / `speak`) that the
- * rest of the app depends on, so the Bhashini fallback (or any future
- * provider) can be swapped in later without touching any screen component.
+ * One interface (`listen` / `speak`) for the whole app so another speech
+ * provider can be swapped in without touching screens.
  *
- * IMPORTANT: this must keep working with zero network. Web Speech API's
- * speechSynthesis works fully offline on most Android/Chrome builds once a
- * Tamil voice is installed on-device; SpeechRecognition typically requires
- * network on Chrome (no good fully-offline browser STT exists today) — see
- * README "Known limitation" section for how the rest of the app degrades
- * if recognition isn't available.
+ * speechSynthesis usually works offline once a voice is installed.
+ * SpeechRecognition on Chrome needs the network; when it is missing or
+ * fails, `listen` resolves with an explicit reason and the UI falls back
+ * to typed input.
  */
+import type { Lang } from "../../i18n";
+
+export type ListenResult =
+  | { ok: true; transcript: string }
+  | { ok: false; reason: "unsupported" | "denied" | "no_speech" | "network" | "aborted" | "error" };
 
 export interface VoiceEngine {
-  speak(text: string, lang?: "ta" | "en"): Promise<void>;
-  listen(lang?: "ta" | "en"): Promise<string>;
+  canSpeak(): boolean;
+  canListen(): boolean;
+  speak(text: string, lang?: Lang): Promise<void>;
+  listen(lang?: Lang): Promise<ListenResult>;
+  stopListening(): void;
   cancelSpeaking(): void;
   isListening(): boolean;
 }
 
-const PRERECORDED_PHRASES: Record<string, string> = {
-  // Maps fixed system phrases to pre-recorded Tamil audio clips for devices
-  // with no usable Tamil TTS voice installed. Keys must match i18n string
-  // values exactly. Drop matching .mp3 files into public/audio/.
-  "வணக்கம்! உங்க இடத்தைக் கண்டுபிடிக்க அனுமதி கொடுங்க.": "/audio/greeting_ta.mp3",
-};
+// Minimal typings for the Web Speech recognition API (not in lib.dom).
+interface RecognitionAlternative {
+  transcript: string;
+}
+interface RecognitionEvent {
+  results: ArrayLike<ArrayLike<RecognitionAlternative>>;
+}
+interface RecognitionErrorEvent {
+  error: string;
+}
+interface Recognition {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((e: RecognitionEvent) => void) | null;
+  onerror: ((e: RecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+type RecognitionCtor = new () => Recognition;
+
+function recognitionCtor(): RecognitionCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { SpeechRecognition?: RecognitionCtor; webkitSpeechRecognition?: RecognitionCtor };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
+export function mapRecognitionError(code: string): Exclude<ListenResult, { ok: true }>["reason"] {
+  switch (code) {
+    case "not-allowed":
+    case "service-not-allowed":
+      return "denied";
+    case "no-speech":
+      return "no_speech";
+    case "network":
+      return "network";
+    case "aborted":
+      return "aborted";
+    default:
+      return "error";
+  }
+}
 
 class WebSpeechVoiceEngine implements VoiceEngine {
-  private recognition: any = null;
-  private listening = false;
-  private currentAudio: HTMLAudioElement | null = null;
+  private recognition: Recognition | null = null;
 
-  private getTamilVoice(): SpeechSynthesisVoice | null {
-    const voices = window.speechSynthesis?.getVoices() ?? [];
-    return (
-      voices.find((v) => v.lang === "ta-IN") ??
-      voices.find((v) => v.lang.startsWith("ta")) ??
-      null
-    );
+  canSpeak(): boolean {
+    return typeof window !== "undefined" && "speechSynthesis" in window;
   }
 
-  async speak(text: string, lang: "ta" | "en" = "ta"): Promise<void> {
+  canListen(): boolean {
+    return recognitionCtor() !== null;
+  }
+
+  private voiceFor(lang: Lang): SpeechSynthesisVoice | null {
+    const voices = window.speechSynthesis?.getVoices() ?? [];
+    const prefix = lang === "ta" ? "ta" : "en";
+    return voices.find((v) => v.lang === `${prefix}-IN`) ?? voices.find((v) => v.lang.startsWith(prefix)) ?? null;
+  }
+
+  speak(text: string, lang: Lang = "ta"): Promise<void> {
     this.cancelSpeaking();
-
-    if (lang === "ta") {
-      const voice = this.getTamilVoice();
-      const fallbackClip = PRERECORDED_PHRASES[text];
-
-      if (!voice && fallbackClip) {
-        return this.playClip(fallbackClip);
-      }
-    }
-
+    if (!this.canSpeak() || !text.trim()) return Promise.resolve();
     return new Promise((resolve) => {
-      if (!("speechSynthesis" in window)) {
-        resolve();
-        return;
-      }
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang === "ta" ? "ta-IN" : "en-IN";
-      const voice = lang === "ta" ? this.getTamilVoice() : null;
+      const voice = this.voiceFor(lang);
       if (voice) utterance.voice = voice;
       utterance.onend = () => resolve();
       utterance.onerror = () => resolve();
@@ -68,54 +101,50 @@ class WebSpeechVoiceEngine implements VoiceEngine {
     });
   }
 
-  private playClip(src: string): Promise<void> {
-    return new Promise((resolve) => {
-      this.currentAudio = new Audio(src);
-      this.currentAudio.onended = () => resolve();
-      this.currentAudio.onerror = () => resolve();
-      this.currentAudio.play().catch(() => resolve());
-    });
-  }
-
   cancelSpeaking(): void {
-    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-    this.currentAudio?.pause();
-    this.currentAudio = null;
+    if (this.canSpeak()) window.speechSynthesis.cancel();
   }
 
   isListening(): boolean {
-    return this.listening;
+    return this.recognition !== null;
   }
 
-  async listen(lang: "ta" | "en" = "ta"): Promise<string> {
-    const SpeechRecognitionImpl =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+  stopListening(): void {
+    this.recognition?.stop();
+  }
 
-    if (!SpeechRecognitionImpl) {
-      // No STT available on this device/browser — caller should fall back
-      // to a typed-text input. Never throw; always resolve so the UI can
-      // degrade gracefully instead of crashing.
-      return "";
-    }
-
+  listen(lang: Lang = "ta"): Promise<ListenResult> {
+    const Ctor = recognitionCtor();
+    if (!Ctor) return Promise.resolve({ ok: false, reason: "unsupported" });
+    this.recognition?.abort();
     return new Promise((resolve) => {
-      const recognition = new SpeechRecognitionImpl();
+      const recognition = new Ctor();
       this.recognition = recognition;
+      let settled = false;
+      const finish = (r: ListenResult) => {
+        if (settled) return;
+        settled = true;
+        resolve(r);
+      };
       recognition.lang = lang === "ta" ? "ta-IN" : "en-IN";
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-
-      this.listening = true;
-      recognition.onresult = (event: any) => {
-        const transcript = event.results?.[0]?.[0]?.transcript ?? "";
-        resolve(transcript);
+      recognition.onresult = (event) => {
+        const transcript = event.results[0]?.[0]?.transcript?.trim() ?? "";
+        finish(transcript ? { ok: true, transcript } : { ok: false, reason: "no_speech" });
       };
-      recognition.onerror = () => resolve("");
+      recognition.onerror = (event) => finish({ ok: false, reason: mapRecognitionError(event.error) });
       recognition.onend = () => {
-        this.listening = false;
+        if (this.recognition === recognition) this.recognition = null;
+        finish({ ok: false, reason: "no_speech" });
       };
-      recognition.start();
+      try {
+        recognition.start();
+      } catch (err) {
+        console.warn("[voice] recognition failed to start", err);
+        this.recognition = null;
+        finish({ ok: false, reason: "error" });
+      }
     });
   }
 }

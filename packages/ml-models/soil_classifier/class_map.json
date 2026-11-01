@@ -1,0 +1,14 @@
+{
+  "alluvial": [
+    "Orignal-Dataset/Alluvial_Soil"
+  ],
+  "black": [
+    "Orignal-Dataset/Black_Soil"
+  ],
+  "laterite": [
+    "Orignal-Dataset/Laterite_Soil"
+  ],
+  "red": [
+    "Orignal-Dataset/Red_Soil"
+  ]
+}

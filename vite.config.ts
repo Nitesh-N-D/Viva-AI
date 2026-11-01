@@ -1,11 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import pkg from "./package.json";
 
 // VIVA AI — Vite config
 // PWA plugin gives us the service worker + offline caching required by
 // HARD CONSTRAINT #2 (offline-first) in the project spec.
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -33,21 +37,21 @@ export default defineConfig({
         ],
       },
       workbox: {
-         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, 
-        // Models can be large; cache them explicitly so soil/disease
-        // scanning keeps working with zero connectivity after first load.
-        globPatterns: ["**/*.{js,css,html,svg,png,ico,json,bin,mp3}"],
+        // The app shell only. Model weights live under /models/ and are
+        // cached on first use by the runtime rule below, so a missing or
+        // large model never bloats or breaks the precache manifest.
+        globPatterns: ["**/*.{js,css,html,svg,png,ico,mp3}"],
+        globIgnores: ["models/**"],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         runtimeCaching: [
           {
-            // All three external calls (OpenWeatherMap, Agmarknet, Gemini)
-            // are now made directly from the browser — see src/lib/weather.ts,
-            // src/lib/mandi.ts, and extractIntent.ts. NetworkFirst means a
-            // fresh result is preferred when online, but a recent cached
-            // response is served instantly if the network is slow or down,
-            // which is exactly the offline-first behavior those files'
-            // own localStorage caches already provide at the app-logic
-            // level — this is a second, complementary layer at the
-            // network level.
+            urlPattern: ({ url }) => url.pathname.startsWith("/models/"),
+            handler: "NetworkFirst",
+            options: { cacheName: "viva-model-cache", networkTimeoutSeconds: 8 },
+          },
+          {
+            // Second, network-level cache layer behind the app-level
+            // localStorage caches in src/lib/weather.ts and src/lib/mandi.ts.
             urlPattern: /^https:\/\/api\.openweathermap\.org\//,
             handler: "NetworkFirst",
             options: { cacheName: "viva-weather-cache", networkTimeoutSeconds: 5 },
@@ -61,6 +65,21 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // TF.js (~1.9 MB) and Leaflet are reached only through dynamic import()
+    // and stay in automatic lazy chunks. Do NOT add them to manualChunks:
+    // that hoists shared helpers into them and makes them preload at startup.
+    // Firebase is needed at startup anyway, so it gets its own cacheable chunk.
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/firebase/") || id.includes("node_modules/@firebase/")) return "firebase";
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

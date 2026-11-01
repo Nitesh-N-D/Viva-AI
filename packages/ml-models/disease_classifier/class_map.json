@@ -1,0 +1,42 @@
+{
+  "tomato_bacterial_spot": [
+    "tomato/train/Tomato___Bacterial_spot",
+    "tomato/val/Tomato___Bacterial_spot"
+  ],
+  "tomato_early_blight": [
+    "tomato/train/Tomato___Early_blight",
+    "tomato/val/Tomato___Early_blight"
+  ],
+  "tomato_healthy": [
+    "tomato/train/Tomato___healthy",
+    "tomato/val/Tomato___healthy"
+  ],
+  "tomato_late_blight": [
+    "tomato/train/Tomato___Late_blight",
+    "tomato/val/Tomato___Late_blight"
+  ],
+  "tomato_leaf_mold": [
+    "tomato/train/Tomato___Leaf_Mold",
+    "tomato/val/Tomato___Leaf_Mold"
+  ],
+  "tomato_septoria_leaf_spot": [
+    "tomato/train/Tomato___Septoria_leaf_spot",
+    "tomato/val/Tomato___Septoria_leaf_spot"
+  ],
+  "tomato_spider_mites": [
+    "tomato/train/Tomato___Spider_mites Two-spotted_spider_mite",
+    "tomato/val/Tomato___Spider_mites Two-spotted_spider_mite"
+  ],
+  "tomato_target_spot": [
+    "tomato/train/Tomato___Target_Spot",
+    "tomato/val/Tomato___Target_Spot"
+  ],
+  "tomato_mosaic_virus": [
+    "tomato/train/Tomato___Tomato_mosaic_virus",
+    "tomato/val/Tomato___Tomato_mosaic_virus"
+  ],
+  "tomato_yellow_leaf_curl_virus": [
+    "tomato/train/Tomato___Tomato_Yellow_Leaf_Curl_Virus",
+    "tomato/val/Tomato___Tomato_Yellow_Leaf_Curl_Virus"
+  ]
+}

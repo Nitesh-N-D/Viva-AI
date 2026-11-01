@@ -1,10 +1,21 @@
-# Drop the trained soil model here
+# soil model folder
 
-This folder is intentionally empty in this build. Once you've trained a
-real model using `packages/ml-models/soil_classifier/train.py` and
-exported it with `tensorflowjs_converter`, copy the resulting
-`model.json` and its `.bin` shard files directly into this folder.
+The app only runs a model from this folder when **all** of these exist and
+validate (see `src/lib/inference/metadata.ts`):
 
-`src/lib/mockModel.ts` checks for `model.json` here at runtime — the
-moment it's present, the app automatically uses it instead of the mock
-classifier. No other code change is required.
+- `metadata.json` with `"status": "validated"`, evaluation results and the training run
+- `labels.json` (ordered class ids; must equal `metadata.labels`)
+- `model.json` + weight shards (TF.js layers-model)
+
+These files are produced by the Kaggle/Colab GPU notebooks in
+`packages/ml-models/`. Never train locally.
+
+## Current contents
+
+The `model.json` and shards currently in this folder are **legacy
+artifacts of unknown provenance**: there is no record of the dataset,
+class order, preprocessing or test metrics used to make them, and the soil
+and disease exports share byte-identical backbone shards. They load in
+TF.js 4.22, but their outputs cannot be interpreted reliably, so
+no `metadata.json` is provided for them and the app shows
+**MODEL AWAITING CLOUD TRAINING**. They are excluded from the PWA precache.

@@ -1,128 +1,103 @@
 # packages/ml-models
 
-Real, runnable Colab notebooks for the two on-device classifiers. **v2,
-rebuilt after v1 broke** — see "What was actually wrong" below before
-you run these, it'll save you time understanding the design.
+Cloud-only training pipelines for VIVA AI's two on-device image classifiers.
 
-Neither model ships pre-trained in this repo (training needs you to
-click "Run" in Colab with your own free Kaggle account), so the app runs
-on the documented mock classifier (`src/lib/mockModel.ts`) until you do.
+| Task | Notebook | Dataset (Kaggle) | Licence | Classes |
+|---|---|---|---|---|
+| soil | `soil_classifier/train_colab.ipynb` | `ai4a-lab/comprehensive-soil-classification-datasets` (`Orignal-Dataset/` only) | CC BY-NC-SA 4.0 (non-commercial) | alluvial, black, laterite, red |
+| disease | `disease_classifier/train_colab.ipynb` | `kaustubhb999/tomatoleaf` | CC0 | 10 tomato-leaf conditions (see `src/domain/taxonomy.ts`) |
 
-## What was actually wrong with v1, and what changed
+**Current status: no model has been trained.** Both folders in
+`public/models/` hold legacy artifacts without provenance, and the app shows
+**MODEL AWAITING CLOUD TRAINING** for both scans. No accuracy numbers exist yet.
 
-Two separate real bugs, not one:
+## Training never runs on a laptop
 
-1. **The hardcoded Kaggle dataset went away (HTTP 403).** v1 assumed a
-   specific dataset slug would always exist with an exact, hand-guessed
-   folder structure. When the dataset disappeared, the notebook had no
-   fallback and failed at the very first download step.
+Each notebook's second cell stops with `REFUSING TO RUN` unless it detects
+a Kaggle or Google Colab runtime **and** a working NVIDIA GPU (`nvidia-smi`
+and TensorFlow both have to see it). There is no CPU fallback. Locally you
+only generate the notebooks, launch them on Kaggle, and import the result.
 
-2. **Training and TF.js conversion shared one Python process — and that
-   silently corrupted Colab's environment.** v1 called `pip install
-   tensorflowjs` and then immediately converted the model, all in the
-   same session that already had TensorFlow loaded and a trained model
-   in memory. This is a well-documented, frequently-reported failure
-   mode: `tensorflowjs`'s pip dependencies (protobuf, numpy, etc.) can
-   conflict with whatever TensorFlow build Colab's GPU runtime ships
-   with, and pip's dependency resolver fighting that mid-session is
-   exactly the kind of thing that produces confusing downstream errors,
-   garbage model output, or a notebook that "completes" but produces a
-   broken export — which matches "incorrect data and the model and the
-   producer many errors" as a symptom.
+## Files
 
-**v2 fixes both, structurally:**
+```
+scripts/build-notebooks.mjs   # single source for both notebooks; edit this, then: node scripts/build-notebooks.mjs
+scripts/cloud-train.mjs       # push notebook to Kaggle GPU, poll, download, import (needs a Kaggle API token)
+scripts/import-model.ts       # validate + atomically install an artifact; rollback
+<task>_classifier/
+  train_colab.ipynb           # generated
+  class_map.json              # app label id -> dataset folder(s); a test keeps it equal to the notebook and taxonomy
+  kernel-metadata.template.json  # Kaggle kernel settings (private, GPU, internet, dataset source)
+```
 
-- **Auto-discovery instead of hardcoded folder names.** The notebook
-  downloads a dataset, then walks every folder, counts real image files,
-  and prints a full report of what's actually there. It fuzzy-matches
-  folder names against the classes we want, and if a dataset's structure
-  doesn't match what's expected, you get a clear, actionable report —
-  not a cryptic crash three cells later. A backup dataset slug is tried
-  automatically if the primary one fails to download at all.
-- **Training and TF.js conversion are split across a runtime restart.**
-  The notebook trains, saves the model to disk, and explicitly tells you
-  to do **Runtime → Restart session** (10 seconds, keeps your files,
-  just clears Python memory) before installing `tensorflowjs` in a
-  clean session and converting the already-saved file via the
-  command-line `tensorflowjs_converter` tool. This means the package
-  that caused the corruption never shares a process with the TensorFlow
-  build used for training.
+## What the notebook does
 
-## Model format
+1. Detects the platform and GPU, and checks disk space.
+2. Downloads the dataset with `kagglehub`, or uses the `/kaggle/input` mount.
+   It fails clearly if the expected folders are missing.
+3. Integrity scan: skips unreadable or truncated files and images whose short
+   side is under 64 px, applies EXIF orientation, converts to RGB, and caches
+   each image shrunk to a long side of at most 640 px, exactly as the app's
+   capture canvas does.
+4. Duplicate control: exact copies are found by sha256 and near-copies by
+   64-bit dHash (Hamming distance ≤ 5), and both are merged into groups.
+   Groups that appear under two labels are dropped. Groups never cross splits.
+5. Splits the data with `StratifiedGroupKFold` into about 72% train, 14% val
+   and 14% test. It saves the split manifest and a class-distribution chart.
+6. Trains MobileNetV2 (ImageNet weights) with a GAP → Dropout → Dense softmax
+   head. It first trains the head only, then fine-tunes the top 40 layers with
+   BatchNorm frozen. Training uses balanced class weights, mild augmentation
+   (very little colour jitter for soil), early stopping, LR-on-plateau, a best
+   checkpoint and a CSV log.
+7. Evaluates on the test split only: accuracy, macro F1, a 95% bootstrap CI,
+   per-class precision/recall/F1, a confusion matrix, misclassified examples,
+   and the fraction of predictions below the app's confidence threshold.
+8. Exports to `.h5` and converts with `tensorflowjs_converter 4.22.0` in an
+   **isolated virtualenv**, which fixes the v1 bug where the converter's
+   dependencies corrupted the training environment.
+9. Validates the artifact: format, the byte size of every shard against the
+   manifest, sha256, and that the output width equals the label count. A
+   **parity test** then runs 32 test images through Keras and through
+   `@tensorflow/tfjs` 4.22 in Node (the browser's library). The maximum
+   difference must be ≤ 1e-3 and the argmax must agree on every image.
+10. Writes `labels.json`, `evaluation.json` and `metadata.json`.
+    `"status": "validated"` is written only if every check passed **and**
+    macro F1 ≥ the bar (soil 0.70, disease 0.90). Otherwise the status is
+    `"unverified"`, with the reason recorded, and both the app and the
+    importer reject the model.
+11. Zips the model and run report. On Colab it copies the zip to Drive.
 
-Both notebooks export with `tfjs.converters.save_keras_model()`
-semantics (via the `tensorflowjs_converter --input_format=keras` CLI,
-post-restart), which produces a **Layers model** (`model.json` contains
-`"format": "layers-model"`). The app's loader
-(`src/lib/mockModel.ts`) tries `tf.loadLayersModel()` first to match
-this, falling back to `tf.loadGraphModel()` only if that fails. This was
-a separate real bug fixed earlier — loading a Layers-model file with the
-wrong loader fails silently and falls back to the mock classifier with
-no visible error, which is its own way to end up looking like "the real
-model isn't working."
+Preprocessing parity with the app: RGB, long side ≤ 640, bilinear stretch to
+224×224 (`align_corners=False, half_pixel_centers=False`, the same as TF.js
+`resizeBilinear`), then `x/127.5 − 1`.
 
-### How to verify your model actually loaded (don't just trust the file is there)
+## Running it
 
-After dropping model files into `public/models/soil_model/` or
-`public/models/disease_model/`, open the app, do a real scan, and check:
+**Kaggle (automated):**
 
-1. **In the UI:** the result card should show "நம்பகத்தன்மை: X%" (a real
-   confidence percentage). "(டெமோ மதிப்பீடு...)" means it's still using
-   the mock classifier.
-2. **In the browser console** (F12 → Console): a load failure now prints
-   `[mockModel] Failed to load model at ...` with the underlying error
-   — that tells you exactly what's wrong instead of failing silently.
+```bash
+pip install kaggle                     # official CLI
+# put your API token at ~/.kaggle/kaggle.json (Kaggle → Settings → API → Create New Token)
+npm run train:cloud -- disease         # pushes a private GPU kernel, waits, downloads, imports
+npm run train:cloud -- soil
+npm test && npm run build
+```
 
-## 1. Soil classifier
+**Colab (manual):** open the notebook in Colab, choose Runtime → Change
+runtime type → GPU, then Run all. Download the zip from Drive and run:
 
-**Notebook:** `soil_classifier/train_colab.ipynb`
-**Primary dataset:** `ai4a-lab/comprehensive-soil-classification-datasets` on Kaggle, with `jhislainematchouath/soil-types-dataset` tried automatically as a backup if the primary fails to download.
+```bash
+npm run model:import -- soil path/to/soil_model
+```
 
-**Important — this dataset's exact class taxonomy is genuinely uncertain
-from outside Kaggle.** Different published papers describe its contents
-differently (one describes black/yellow/peat/volcanic/laterite/cracked;
-others describe a more standard alluvial/black/clay/red split) — likely
-because it's a broad, multi-purpose collection and different
-researchers used different subsets of it. Rather than gamble on a second
-hardcoded guess (exactly what broke v1), the notebook **discovers
-whatever classes are really in the download, prints them all, and
-fuzzy-matches** against alluvial/black/red plus a flexible 4th slot that
-accepts clay, laterite, or yellow soil — whichever is actually present.
-**Read the printed report in step 3 of the notebook** before assuming
-anything about what you'll end up training on.
+**Rollback:** `npm run model:rollback -- soil` restores the previous folder
+from `models-rollback/`. That folder is git-ignored.
 
-### How to run it
+## Known limitations
 
-1. Upload `train_colab.ipynb` to [Google Colab](https://colab.research.google.com).
-2. Runtime → Change runtime type → **T4 GPU**.
-3. Get a free Kaggle API token: kaggle.com → Account → "Create New API Token" → downloads `kaggle.json`.
-4. Run cells top to bottom. Upload `kaggle.json` when prompted.
-5. **Read the folder-discovery report (step 3) and the class-matching report (step 4) before continuing** — if the matching looks wrong, the notebook tells you exactly how to fix `MATCHED` by hand.
-6. After training and saving (step 8), **do Runtime → Restart session** — not "Disconnect and delete runtime," which would wipe your saved model.
-7. Continue running from step 9 onward in the fresh session to convert and download.
-8. Unzip the download and copy everything inside into `public/models/soil_model/`, replacing the placeholder README there.
-9. Set `SOIL_LABELS` in `src/lib/mockModel.ts` to the Tamil translations of the notebook's final printed `CANONICAL_CLASSES`, **in that exact order** — the notebook fixes this order deterministically and reminds you of it right before you need it.
-
-## 2. Disease classifier
-
-**Notebook:** `disease_classifier/train_colab.ipynb`
-**Dataset:** [`vipoooool/new-plant-diseases-dataset`](https://www.kaggle.com/datasets/vipoooool/new-plant-diseases-dataset) — the standard PlantVillage republication, actively cited in published research as recently as late 2024, ~87k images across 38 classes.
-
-Filters down to a small 4-class subset by default (tomato healthy /
-tomato early blight / tomato yellow-leaf-curl / pepper bacterial spot) —
-a narrow, accurate model beats a broad, unreliable one for a live demo.
-Same auto-discovery and restart-isolation fixes as the soil notebook.
-Edit `SELECTED_CLASSES` in step 4 if you want different diseases —
-step 3's printed folder list shows you the exact real names to use.
-
-Unlike the soil notebook, `CLASS_ORDER` here is fixed explicitly in code
-(`["healthy","leaf_blight","yellowing","pest_damage"]`), so it already
-matches `DISEASE_LABELS` in `mockModel.ts` with no relabeling step
-needed.
-
-## If training doesn't finish in time
-
-Ship with the mock classifier and say so plainly in your demo. A
-working, honest mock with a clear, already-built path to real training
-reads better to judges than an overstated claim that falls apart under a
-follow-up question.
+- Disease: PlantVillage-style single leaves on plain backgrounds. Field photos
+  will score lower than the test metrics. Tomato only.
+- Soil: a few hundred photos, about 50 of them alluvial. Expect wide confidence
+  intervals. It predicts a visual category only; it is not a soil test.
+- Softmax scores are not calibrated probabilities. The app reports them as
+  "model score" and asks for a retake below `minConfidence`.
