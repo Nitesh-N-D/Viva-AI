@@ -66,9 +66,11 @@ firestore.rules       all write validation (Spark plan: no Cloud Functions)
 
 ## Documentation
 
-- [AUDIT_REPORT.md](AUDIT_REPORT.md) covers what was found and what changed.
-- [IMPLEMENTATION_TRACKER.md](IMPLEMENTATION_TRACKER.md) gives the status of every requirement.
-- [TESTING_REPORT.md](TESTING_REPORT.md) lists the commands and their actual results.
-- [MODEL_EVALUATION_REPORT.md](MODEL_EVALUATION_REPORT.md) records the model status (no trained model yet).
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) covers hosting, rules, CI secrets and model import.
-- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists the known limitations.
+See [docs/README.md](docs/README.md) for the index.
+
+- [AUDIT_REPORT.md](docs/AUDIT_REPORT.md) covers what was found and what changed.
+- [IMPLEMENTATION_TRACKER.md](docs/IMPLEMENTATION_TRACKER.md) gives the status of every requirement.
+- [TESTING_REPORT.md](docs/TESTING_REPORT.md) lists the commands and their actual results.
+- [MODEL_EVALUATION_REPORT.md](docs/MODEL_EVALUATION_REPORT.md) records the model status (no trained model yet).
+- [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) covers hosting, rules, CI secrets and model import.
+- [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md) lists the known limitations.

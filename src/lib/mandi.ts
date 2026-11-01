@@ -9,7 +9,7 @@
  *    is "unavailable", or a clearly-labelled saved copy.
  *  - Dev requests go through the Vite proxy (/api-mandi). In production
  *    set VITE_MANDI_PROXY_URL to a same-origin proxy if data.gov.in's CORS
- *    policy blocks the deployed origin (see DEPLOYMENT_GUIDE.md).
+ *    policy blocks the deployed origin (see docs/DEPLOYMENT_GUIDE.md).
  */
 import { fetchWithTimeout, readStored, writeStored } from "./http";
 
