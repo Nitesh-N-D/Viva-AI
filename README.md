@@ -1,155 +1,74 @@
 # VIVA AI
 
-Tamil voice co-pilot for farming and frugal fabrication — two co-pilots,
-one shared voice-and-avatar shell, **100% client-side, runs entirely on
-free tiers, no backend server required.**
+A Tamil-first, offline-first PWA for small farmers, with a frugal-fabrication
+assistant. It runs entirely on free tiers: React on Firebase Hosting, Firestore
+on the Spark plan, and on-device TensorFlow.js. There is no custom backend.
 
-------------------------------------------------------------------------
+**Live:** https://viva-ai-2cc88.web.app
 
-> **Tamil Voice Co‑Pilot for Smart Farming & Frugal Fabrication**
+[![CI](https://github.com/Nitesh-N-D/Viva-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/Nitesh-N-D/Viva-AI/actions/workflows/ci.yml)
 
-[![React](https://img.shields.io/badge/React-18-blue)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)]()
-[![Firebase](https://img.shields.io/badge/Firebase-Hosting-orange)]()
-[![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-ML-ff6f00)]()
+## What works today
 
-## 🚀 Live Demo
-
-**Firebase Hosting:** https://viva-ai-2cc88.web.app
-
-------------------------------------------------------------------------
-
-## 📌 Overview
-
-VIVA AI is an offline‑first Progressive Web App that helps farmers
-with: - Soil classification - Plant disease detection - Crop
-recommendations - Weather-aware insights - Mandi prices - Community soil
-mapping
-
-It also includes a fabrication assistant for simple design generation
-and material guidance.
-
-------------------------------------------------------------------------
-
-## ✨ Features
-
--   🌱 On-device soil classification (TensorFlow.js)
--   🍃 Plant disease detection
--   🌾 Crop recommendation engine
--   🌦️ Weather integration
--   📈 Mandi price lookup
--   🗺️ Crowd-sourced soil map
--   🗣️ Tamil/English interface
--   🔧 Fabrication assistant
--   ☁️ Firebase Authentication & Firestore
--   📱 Offline-first PWA architecture
-
-------------------------------------------------------------------------
-
-## 🛠️ Tech Stack
-
--   React
--   TypeScript
--   Vite
--   TensorFlow.js
--   Firebase Authentication
--   Cloud Firestore
--   Firebase Hosting
--   Zustand
--   Tailwind CSS
--   Leaflet
-
-------------------------------------------------------------------------
+| Feature | Status | Notes |
+|---|---|---|
+| Soil photo classification | **Awaiting cloud training** | The pipeline is complete and gated by `metadata.json`. The app shows "MODEL AWAITING CLOUD TRAINING" and never makes a fake prediction. |
+| Tomato leaf condition scan | **Awaiting cloud training** | Same as soil. Bilingual guidance is ready for all 10 classes. |
+| Crop suggestions | Working | An explainable, deterministic rule engine over soil, season, water, pH and duration, **not ML**. Each score is broken into per-check results, and the 5-day rain forecast only raises timing risks. |
+| Weather | Working with `VITE_OPENWEATHER_API_KEY` | Shows the source (live/cached) and its age. With no key it says so. There is no mock data. |
+| Mandi prices | Working with `VITE_AGMARKNET_API_KEY` | data.gov.in Agmarknet daily prices. Arrival date and source are shown, and cached data is never labelled live. There is no mock data. |
+| Community soil map | Working with Firebase | Leaflet map of ~1 km tiles. Star ratings and reviews appear inside each marker popup. One rating per user per tile is enforced by Firestore rules. |
+| Fabrication drawings | Working | Parametric, dimension-validated technical drawings with SVG/PNG download and print-to-PDF. Drawings are built by escaping, never with `innerHTML`. |
+| Offline | Working | The PWA app shell is precached. Writes go to an IndexedDB queue with idempotency keys and backoff. |
+| Language and voice | Working | Tamil (default) and English, with every key translated. Voice uses the Web Speech API where the browser supports it. |
 
 ## Quick start
 
 ```bash
-npm install
-cp .env.example .env.local   # fill in real keys later — the app runs fine without any of them
+npm ci
+cp .env.example .env.local    # optional keys; every feature degrades clearly without them
 npm run dev
 ```
 
 ```bash
-npm test       # Vitest unit tests — recommendation engine, intent extraction, shape generator
-npm run build  # production build to dist/
+npm run typecheck   # tsc -b
+npm test            # Vitest: 11 files
+npm run build       # production build + service worker
 ```
 
-Open the printed local URL on your phone (same Wi-Fi network) or in
-Chrome DevTools' device emulator. Allow location + camera when prompted.
-
-------------------------------------------------------------------------
-
-## Architecture: no backend, by design
-
-| Capability | How it works now |
-|---|---|
-| Weather | Browser calls OpenWeatherMap's API directly (`src/lib/weather.ts`) |
-| Mandi prices | Browser attempts a direct call to data.gov.in/Agmarknet (`src/lib/mandi.ts`) |
-| Fabrication intent extraction | Rule-based by default; optionally calls Gemini directly from the browser (`extractIntent.ts`) |
-| Auth | Firebase Anonymous Authentication (client SDK) |
-| Data storage | Firestore (client SDK) — Spark plan's free quota is generous for a hackathon's traffic |
-| Crowd-sourced soil map | Each soil scan rolls itself into a `mapTiles` Firestore document via a client-side transaction — no scheduled server job needed |
-| ML inference | TensorFlow.js, fully on-device, no server round-trip ever |
-
-------------------------------------------------------------------------
-
-## Project layout
+## Architecture
 
 ```
-viva-ai/
-├── src/
-│   ├── app/                 # Home screen navigation
-│   ├── modules/
-│   │   ├── farm/             # Farm Co-pilot screens, data, and the recommendation engine
-│   │   └── fabrication/      # Fabrication Co-pilot screens, shape templates, materials DB
-│   ├── shared/
-│   │   ├── voice/             # VoiceEngine — STT/TTS abstraction
-│   │   ├── offline-sync/      # IndexedDB write-ahead queue
-│   │   ├── avatar-engine/     # Shared avatar state machine
-│   │   └── ui/                # Button, IconTile, Screen, Avatar
-│   ├── lib/                   # firebase.ts, weather.ts, mandi.ts, mockModel.ts — all direct client calls, no backend
-│   ├── i18n/                  # ta.json (default), en.json
-│   └── types.ts
-├── packages/ml-models/         # Real Google Colab notebooks + dataset sourcing notes (not auto-run)
-├── public/models/              # Drop trained TF.js models here
-├── public/audio/                # Optional pre-recorded Tamil TTS fallback clips
-├── public/icons/                 # Full favicon set (16/32/48/192/512px PNG + SVG + apple-touch-icon)
-├── public/favicon.ico            # Multi-resolution .ico for older browsers/crawlers
-├── public/robots.txt             # Crawler rules + sitemap pointer
-├── public/sitemap.xml            # Sitemap (single entry — see Section 9, this is a single-page app today)
-├── index.html                    # Full SEO meta tags, Open Graph, Twitter Card, JSON-LD, Search Console hook
-├── firebase.json                # Hosting + Firestore only — no functions block
-└── firestore.rules              # Enforces no-PII writes; client writes mapTiles directly now
+src/
+  app/            shell, hash router, Zustand store, settings, location, sync/weather hooks
+  domain/         taxonomy (model label ids ↔ names), districts
+  lib/            firebase (auth, scans, ratings, aggregation), mandi, weather, http, format
+  lib/inference/  metadata validation, artifact checks, TF.js classifier (lazy-loaded)
+  modules/farm/   scan, guidance, crop recommend, my crop, mandi, soil map, data/*.json
+  modules/fabrication/  engine (shapes, drawing, svg), intent extraction, viewer + exporters
+  shared/         ui components, voice engine, offline sync queue
+  i18n/           ta.json, en.json
+packages/ml-models/   cloud GPU training notebooks (Kaggle/Colab only)
+scripts/              notebook generator, Kaggle launcher, model import/rollback
+firestore.rules       all write validation (Spark plan: no Cloud Functions)
 ```
 
-------------------------------------------------------------------------
+- **Models.** `public/models/<task>_model/` must contain a `metadata.json`
+  with `"status": "validated"`, test metrics and training provenance, plus a
+  `labels.json` that matches. Otherwise TF.js is never loaded. See
+  `packages/ml-models/README.md`.
+- **Aggregation.** Clients never write counts or averages. Map tiles and
+  rating summaries are computed from the individual documents on read.
+  Rules make those documents write-once (or own-document-only for ratings)
+  and schema-validated.
+- **Secrets.** Every `VITE_*` value ends up in the public bundle. Restrict each
+  key by HTTP referrer in its provider console. `.env*` files are git-ignored.
 
-## Deploying (free tiers only, no Blaze)
+## Documentation
 
-**Frontend:** `npm run build` then deploy the `dist/` folder to Vercel,
-Netlify, or `firebase deploy --only hosting` — all free tier, no billing
-account needed for any of them.
-
-**Firestore rules:** `firebase deploy --only firestore:rules` — review
-`firestore.rules` first. It now allows the client to write to `mapTiles`
-directly (with shape validation), since there's no server-side Admin SDK
-process doing that anymore.
-
-**That's it.** There's no backend deploy step — no Cloud Functions, no
-secrets to set, nothing requiring a Blaze upgrade prompt.
-
-------------------------------------------------------------------------
-
-## 🤖 Machine Learning
-
-Real TensorFlow.js models should be placed in:
-
-``` text
-public/models/soil_model/
-public/models/disease_model/
-```
-
-The application automatically falls back to a mock classifier if trained
-models are unavailable.
-
-------------------------------------------------------------------------
+- [AUDIT_REPORT.md](AUDIT_REPORT.md) covers what was found and what changed.
+- [IMPLEMENTATION_TRACKER.md](IMPLEMENTATION_TRACKER.md) gives the status of every requirement.
+- [TESTING_REPORT.md](TESTING_REPORT.md) lists the commands and their actual results.
+- [MODEL_EVALUATION_REPORT.md](MODEL_EVALUATION_REPORT.md) records the model status (no trained model yet).
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) covers hosting, rules, CI secrets and model import.
+- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists the known limitations.
