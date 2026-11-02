@@ -37,3 +37,6 @@ datasets/
 models-rollback/
 public/models/.*_model.staging/
 downloads/
+tmp/
+CLAUDE.md
+

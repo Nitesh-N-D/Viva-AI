@@ -22,7 +22,7 @@ jobs:
       VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
       VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
       VITE_OPENWEATHER_API_KEY: ${{ secrets.VITE_OPENWEATHER_API_KEY }}
-      VITE_AGMARKNET_API_KEY: ${{ secrets.VITE_AGMARKNET_API_KEY }}
+      VITE_MANDI_PROXY_URL: ${{ secrets.VITE_MANDI_PROXY_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -1,17 +1,78 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import pkg from "./package.json";
+import { CACHE_TTL_MS, RateLimiter, TtlCache, handleMandiProxy } from "./src/server/mandiProxy";
+import type { MandiProxyBody } from "./src/lib/mandiQuery";
+
+/**
+ * Server-side mandi key. AGMARKNET_API_KEY has no VITE_ prefix, so Vite never
+ * exposes it to client code. A legacy VITE_AGMARKNET_API_KEY in .env is still
+ * accepted here for the dev/preview proxy only; client code no longer reads it.
+ */
+function mandiKey(env: Record<string, string>): string | undefined {
+  return env.AGMARKNET_API_KEY || env.VITE_AGMARKNET_API_KEY || undefined;
+}
+
+/** Serves /api-mandi/prices from the shared proxy handler in `vite` and `vite preview`. */
+function mandiDevProxy(apiKey: string | undefined): Plugin {
+  const cache = new TtlCache<MandiProxyBody>(CACHE_TTL_MS);
+  const limiter = new RateLimiter();
+  const middleware = (req: import("http").IncomingMessage, res: import("http").ServerResponse, next: () => void) => {
+    const url = new URL(req.url ?? "/", "http://localhost");
+    if (url.pathname !== "/api-mandi/prices") return next();
+    handleMandiProxy(url.searchParams, req.socket.remoteAddress ?? "local", {
+      apiKey,
+      fetch: (u, init) => fetch(u, init),
+      cache,
+      limiter,
+    }).then(
+      (r) => {
+        res.writeHead(r.status, r.headers);
+        res.end(JSON.stringify(r.body));
+      },
+      () => {
+        res.writeHead(500, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "upstream_error" }));
+      }
+    );
+  };
+  return {
+    name: "viva-mandi-proxy",
+    configureServer: (server) => void server.middlewares.use(middleware),
+    configurePreviewServer: (server) => void server.middlewares.use(middleware),
+  };
+}
+
+/** Fails the build if a server-only secret value ends up in any emitted file. */
+function forbidSecretsInBundle(secrets: (string | undefined)[]): Plugin {
+  const values = secrets.filter((s): s is string => !!s && s.length >= 8);
+  return {
+    name: "viva-forbid-secrets",
+    apply: "build",
+    generateBundle(_opts, bundle) {
+      for (const [file, chunk] of Object.entries(bundle)) {
+        const text = chunk.type === "chunk" ? chunk.code : typeof chunk.source === "string" ? chunk.source : "";
+        if (values.some((v) => text.includes(v))) this.error(`server-only secret found in ${file}; refusing to build`);
+      }
+    },
+  };
+}
 
 // VIVA AI — Vite config
 // PWA plugin gives us the service worker + offline caching required by
 // HARD CONSTRAINT #2 (offline-first) in the project spec.
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const apiKey = mandiKey(env);
+  return {
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [
     react(),
+    mandiDevProxy(apiKey),
+    forbidSecretsInBundle([apiKey]),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [
@@ -56,11 +117,6 @@ export default defineConfig({
             handler: "NetworkFirst",
             options: { cacheName: "viva-weather-cache", networkTimeoutSeconds: 5 },
           },
-          {
-            urlPattern: /^https:\/\/api\.data\.gov\.in\//,
-            handler: "NetworkFirst",
-            options: { cacheName: "viva-mandi-cache", networkTimeoutSeconds: 5 },
-          },
         ],
       },
     }),
@@ -82,16 +138,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      // Forward /api-mandi/ → https://api.data.gov.in/
-      // This runs inside Node.js (no browser CORS rules), so it works
-      // perfectly on localhost without any external CORS proxy service.
-      "/api-mandi": {
-        target: "https://api.data.gov.in",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api-mandi/, ""),
-        secure: true,
-      },
-    },
+    // /api-mandi/prices is served by the mandiDevProxy plugin above, which
+    // adds the key server-side. There is no blind pass-through to data.gov.in.
   },
+  };
 });

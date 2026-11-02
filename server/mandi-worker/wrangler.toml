@@ -1,0 +1,11 @@
+# Production mandi price proxy (Cloudflare Workers free tier).
+# Deploy:  npx wrangler@4 login
+#          npx wrangler@4 secret put AGMARKNET_API_KEY --config server/mandi-worker/wrangler.toml
+#          npx wrangler@4 deploy --config server/mandi-worker/wrangler.toml
+# Then set the GitHub secret VITE_MANDI_PROXY_URL to the printed workers.dev URL.
+name = "viva-ai-mandi-proxy"
+main = "index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://viva-ai-2cc88.web.app,https://viva-ai-2cc88.firebaseapp.com,http://localhost:5173,http://localhost:4173"
