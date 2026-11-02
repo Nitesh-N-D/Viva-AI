@@ -1,8 +1,20 @@
-<svg viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" rx="28" fill="#5B7553"/>
-  <rect x="86" y="100" width="20" height="60" rx="10" fill="#A9C79A"/>
-  <circle cx="96" cy="84" r="42" fill="#FBF6EC"/>
-  <circle cx="82" cy="76" r="7" fill="#374A31"/>
-  <circle cx="110" cy="76" r="7" fill="#374A31"/>
-  <path d="M78 96 Q96 110 114 96" stroke="#374A31" stroke-width="5" fill="none" stroke-linecap="round"/>
-</svg>
+<svg viewBox="0 0 512 512" width="192" height="192" xmlns="http://www.w3.org/2000/svg"><defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6B8A61"/>
+      <stop offset="1" stop-color="#46603F"/>
+    </linearGradient>
+  </defs><rect width="512" height="512" rx="104" fill="url(#bg)"/><g id="mark">
+    <!-- soil -->
+    <path d="M104 404 Q256 318 408 404 Q408 430 384 430 L128 430 Q104 430 104 404 Z" fill="#B07A4F"/>
+    <path d="M150 404 Q256 350 362 404" stroke="#8C5A35" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.55"/>
+    <!-- stem -->
+    <path d="M256 372 C256 320 254 280 258 236" stroke="#FBF6EC" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <!-- left leaf -->
+    <path d="M254 282 C206 290 150 262 132 196 C196 184 248 214 254 282 Z" fill="#A9C79A"/>
+    <path d="M246 272 C214 256 184 234 162 208" stroke="#5B7553" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <!-- right leaf -->
+    <path d="M260 240 C262 166 314 108 398 102 C402 184 344 240 260 240 Z" fill="#FBF6EC"/>
+    <path d="M272 228 C308 198 340 166 370 128" stroke="#A9C79A" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <!-- spark -->
+    <path d="M150 104 L158 128 L182 136 L158 144 L150 168 L142 144 L118 136 L142 128 Z" fill="#F2C76E"/>
+  </g></svg>

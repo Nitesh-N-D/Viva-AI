@@ -1,8 +1,27 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" fill="#5B7553"/>
-  <rect x="229" y="266" width="54" height="160" rx="27" fill="#A9C79A"/>
-  <circle cx="256" cy="224" r="120" fill="#FBF6EC"/>
-  <circle cx="216" cy="200" r="22" fill="#374A31"/>
-  <circle cx="296" cy="200" r="22" fill="#374A31"/>
-  <path d="M204 258 Q256 298 308 258" stroke="#374A31" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <!-- VIVA AI mark: a seedling growing from a soil mound, with a small
+       "insight" spark. Full-bleed square; rounded and maskable variants are
+       generated from this file by scripts/build-icons.mjs. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6B8A61"/>
+      <stop offset="1" stop-color="#46603F"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g id="mark">
+    <!-- soil -->
+    <path d="M104 404 Q256 318 408 404 Q408 430 384 430 L128 430 Q104 430 104 404 Z" fill="#B07A4F"/>
+    <path d="M150 404 Q256 350 362 404" stroke="#8C5A35" stroke-width="10" fill="none" stroke-linecap="round" opacity="0.55"/>
+    <!-- stem -->
+    <path d="M256 372 C256 320 254 280 258 236" stroke="#FBF6EC" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <!-- left leaf -->
+    <path d="M254 282 C206 290 150 262 132 196 C196 184 248 214 254 282 Z" fill="#A9C79A"/>
+    <path d="M246 272 C214 256 184 234 162 208" stroke="#5B7553" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <!-- right leaf -->
+    <path d="M260 240 C262 166 314 108 398 102 C402 184 344 240 260 240 Z" fill="#FBF6EC"/>
+    <path d="M272 228 C308 198 340 166 370 128" stroke="#A9C79A" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <!-- spark -->
+    <path d="M150 104 L158 128 L182 136 L158 144 L150 168 L142 144 L118 136 L142 128 Z" fill="#F2C76E"/>
+  </g>
 </svg>
