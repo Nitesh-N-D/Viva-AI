@@ -41,7 +41,9 @@
     "finance": "Accounts",
     "water": "Water",
     "assistant": "Assistant",
-    "watchlist": "Price alerts"
+    "watchlist": "Price alerts",
+    "soilScan": "Soil Scan",
+    "diseaseScan": "Disease Scan"
   },
   "onboarding": {
     "title": "Welcome",
@@ -406,7 +408,30 @@
       "no_speech": "No speech was heard. Please try again.",
       "network": "Speech recognition needs an internet connection.",
       "aborted": "Listening stopped.",
-      "error": "Speech recognition failed. Please type instead."
+      "error": "Speech recognition failed. Please type instead.",
+      "empty": "There is no text to read on this page.",
+      "synthesis_failed": "Reading stopped because the voice engine failed. Please try again.",
+      "no_voice": "No voice for this language is installed on this device, so nothing was read."
+    },
+    "readPage": "Read this page aloud",
+    "readPageShort": "Read aloud",
+    "barLabel": "Read-aloud controls",
+    "loading": "Preparing voice…",
+    "speaking": "Reading…",
+    "speakingPart": "Reading part {n} of {total}",
+    "paused": "Paused",
+    "pausedPart": "Paused at part {n} of {total}",
+    "pause": "Pause",
+    "resume": "Resume",
+    "next": "Next section",
+    "restart": "Restart",
+    "stop": "Stop",
+    "dismiss": "Dismiss",
+    "switchToEnglish": "Switch to English",
+    "installTamil": {
+      "android": "Android: Settings → System → Languages → Text-to-speech → Speech Services by Google → Install voice data → Tamil.",
+      "windows": "Windows: Settings → Time & language → Speech → Add voices → Tamil, then reopen the browser.",
+      "other": "iPhone and Mac may not offer a Tamil voice; you can read the page in English instead."
     }
   },
   "farm": {
@@ -548,7 +573,16 @@
     "action_sign_in": "Reload the app to sign in again.",
     "action_edit_input": "Please change what you entered and try again.",
     "action_contact": "Ask the person who set up this app to check the configuration.",
-    "action_none": "Your saved data is safe."
+    "action_none": "Your saved data is safe.",
+    "chunkLoad": "This page could not be loaded. Check your connection and reload.",
+    "reload": "Reload",
+    "unexpected": "Something unexpected went wrong. Your data is safe.",
+    "details": "Technical details",
+    "imageInvalid": "That is not an image. Choose a JPG, PNG or WebP photo.",
+    "imageTooLarge": "The image is too large (maximum {mb} MB).",
+    "imageUnreadable": "This image could not be opened. Try another photo.",
+    "modelLoad": "The model could not be loaded. Check your connection and try again, or choose manually below.",
+    "analyseFailed": "The photo could not be analysed. Please try again."
   },
   "ai": {
     "sectionTitle": "AI explanation",
@@ -882,5 +916,32 @@
       "range": "The upper price must be higher than the lower price",
       "noRule": "Set at least one rule"
     }
+  },
+  "location": {
+    "notSet": "Location not set",
+    "gpsApprox": "Your GPS location (approx.)",
+    "deniedHelp": "Location permission is blocked. To allow it: tap the lock icon in the browser's address bar → Site settings → Location → Allow, then try again. Or pick your district below.",
+    "timeout": "Getting your location took too long. Try again outdoors, or pick your district.",
+    "retry": "Try again"
+  },
+  "notify": {
+    "title": "Background notifications",
+    "intro": "Shows today's tasks and price alerts as notifications, even when the app is closed.",
+    "enable": "Enable notifications",
+    "disable": "Turn off background checks",
+    "test": "Send a test notification",
+    "testBody": "Notifications are working.",
+    "testFailed": "The test notification could not be shown.",
+    "unsupported": "This browser does not support notifications. Reminders appear only while the app is open.",
+    "denied": "Notifications are blocked. To allow them: lock icon in the address bar → Site settings → Notifications → Allow.",
+    "granted": "Notifications are allowed.",
+    "bgActive": "Background checks are on. The browser decides when they run (usually every few hours, when online).",
+    "bgUnavailable": "This browser does not allow background checks. They may become available if you install the app (Add to Home screen) in Chrome or Edge. For now, notifications come only while the app is open or in a background tab.",
+    "limits": "Note: this is not server push. The browser may delay or skip background checks, and they do not run on iPhone or Firefox.",
+    "tasksTitle": "Farm tasks due",
+    "priceTitle": "Price alert",
+    "priceAbove": "{commodity}: ₹{modal}/quintal at {market} (above your ₹{threshold} target)",
+    "priceBelow": "{commodity}: ₹{modal}/quintal at {market} (below your ₹{threshold} target)",
+    "priceChange": "{commodity}: price at {market} moved ₹{previous} → ₹{modal}/quintal"
   }
 }

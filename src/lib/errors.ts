@@ -133,6 +133,44 @@ export function installGlobalErrorHandlers(onError?: (e: AppError) => void): voi
   });
   window.addEventListener("error", (ev) => {
     // Resource load errors (img/script) have no .error; ignore those.
-    if (ev.error) safeLog("uncaught", ev.error);
+    if (!ev.error) return;
+    safeLog("uncaught", ev.error);
+    onError?.(classifyError(ev.error));
+  });
+}
+
+/**
+ * True when a dynamic import() failed, typically because a new deploy
+ * replaced the hashed chunk files or the network dropped mid-navigation.
+ */
+export function isChunkLoadError(err: unknown): boolean {
+  const msg = err instanceof Error ? `${err.name} ${err.message}` : String(err ?? "");
+  return /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i.test(msg);
+}
+
+/**
+ * Wraps a dynamic import: retries once after a short pause, then (once per
+ * session) reloads the page so a fresh index.html points at the new chunks.
+ * If it still fails, the error propagates to the ErrorBoundary.
+ */
+export function importWithRetry<T>(load: () => Promise<T>, opts: { delayMs?: number; reload?: () => void } = {}): Promise<T> {
+  const { delayMs = 800, reload = () => window.location.reload() } = opts;
+  return load().catch(async (err) => {
+    if (!isChunkLoadError(err)) throw err;
+    await new Promise((r) => setTimeout(r, delayMs));
+    try {
+      return await load();
+    } catch (err2) {
+      const KEY = "viva-ai:chunk-reload";
+      let already = false;
+      try {
+        already = sessionStorage.getItem(KEY) === "1";
+        if (!already) sessionStorage.setItem(KEY, "1");
+      } catch {
+        already = true; // no storage: never risk a reload loop
+      }
+      if (!already && typeof navigator !== "undefined" && navigator.onLine !== false) reload();
+      throw err2;
+    }
   });
 }

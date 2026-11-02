@@ -55,7 +55,7 @@ export function MyCrop() {
   }
 
   return (
-    <Screen title={name} subtitle={t("farm.title")} speakText={`${name}. ${stage[lang]}`}>
+    <Screen title={name} subtitle={t("farm.title")}>
       <Card>
         <p className="text-sm text-soil-600">{t("farm.plantedOn", { date: formatDateTime(active.plantedAt, lang) })}</p>
         <p className="font-display font-bold text-xl mt-1">{done ? t("farm.harvestDue") : t("farm.dayOf", { day: days, total: crop.durationDays })}</p>

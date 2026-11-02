@@ -114,10 +114,17 @@ export function ImageCapture({
 
   function capture() {
     const v = videoRef.current;
-    if (!v || !v.videoWidth) return;
-    const canvas = toCanvas(v, v.videoWidth, v.videoHeight);
-    stopCamera();
-    accept(canvas);
+    if (!v || !v.videoWidth) {
+      setProblem(t("scan.problem.unreadable"));
+      return;
+    }
+    try {
+      const canvas = toCanvas(v, v.videoWidth, v.videoHeight);
+      stopCamera();
+      accept(canvas);
+    } catch {
+      setProblem(t("scan.problem.unreadable"));
+    }
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {

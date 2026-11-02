@@ -58,10 +58,9 @@ export function GuidanceScreen({ id }: { id: string | null }) {
     );
   }
 
-  const speak = [name, ...entry.symptoms[lang], ...entry.steps[lang]].join(". ");
 
   return (
-    <Screen title={name} subtitle={t("remedy.title")} speakText={speak} onBack={() => goBack({ name: "disease" })}>
+    <Screen title={name} subtitle={t("remedy.title")} onBack={() => goBack({ name: "disease" })}>
       <Notice tone="warning">{t("remedy.disclaimer")}</Notice>
       {entry.severity === "high" && (
         <div>

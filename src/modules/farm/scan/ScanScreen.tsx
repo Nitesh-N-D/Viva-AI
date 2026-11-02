@@ -28,6 +28,18 @@ function ModelInfo({ meta }: { meta: ModelMetadata }) {
   );
 }
 
+/** Raw error text, collapsed by default and skipped by the page reader. */
+function TechDetails({ reason }: { reason: string }) {
+  const { t } = useT();
+  if (!reason) return null;
+  return (
+    <details className="mt-2 text-xs" data-no-read>
+      <summary className="cursor-pointer">{t("errors.details")}</summary>
+      <span className="font-mono break-all">{reason}</span>
+    </details>
+  );
+}
+
 function ResultCard({ task, outcome }: { task: ModelTask; outcome: Extract<ClassifyOutcome, { status: "ok" }> }) {
   const { t, lang } = useT();
   const best = outcome.top[0];
@@ -146,7 +158,7 @@ export function ScanScreen({ task }: { task: ModelTask }) {
         }
       }
     } catch (err) {
-      setOutcome({ status: "error", reason: err instanceof Error ? err.message : String(err) });
+      setOutcome({ status: "error", reason: err instanceof Error ? err.message : String(err ?? "") });
     } finally {
       setBusy(false);
     }
@@ -155,15 +167,7 @@ export function ScanScreen({ task }: { task: ModelTask }) {
   const title = task === "soil" ? t("soilScan.title") : t("diseaseScan.title");
 
   return (
-    <Screen
-      title={title}
-      speakText={`${title}. ${task === "soil" ? t("soilScan.instruction") : t("diseaseScan.instruction")}`}
-      actions={
-        <Button variant="ghost" size="sm" onClick={() => navigate({ name: task === "soil" ? "disease" : "soil" })}>
-          {task === "soil" ? t("diseaseScan.title") : t("soilScan.title")}
-        </Button>
-      }
-    >
+    <Screen title={title}>
       {task === "disease" && <Notice tone="info">{t("diseaseScan.scope")}</Notice>}
 
       {status === null && <Spinner label={t("model.checking")} />}
@@ -179,7 +183,8 @@ export function ScanScreen({ task }: { task: ModelTask }) {
 
       {status?.state === "error" && (
         <Notice tone="error" title={t("model.error")}>
-          <span className="font-mono text-xs break-all">{status.reason}</span>
+          <p>{t("errors.modelLoad")}</p>
+          <TechDetails reason={status.reason} />
         </Notice>
       )}
 
@@ -203,7 +208,8 @@ export function ScanScreen({ task }: { task: ModelTask }) {
       {outcome?.status === "ok" && <ResultCard task={task} outcome={outcome} />}
       {outcome?.status === "error" && (
         <Notice tone="error" title={t("model.error")}>
-          <span className="font-mono text-xs break-all">{outcome.reason}</span>
+          <p>{t("errors.analyseFailed")}</p>
+          <TechDetails reason={outcome.reason} />
         </Notice>
       )}
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useT } from "../i18n";
-import { districtName } from "../domain/districts";
+import { locationLabel } from "./locationLabel";
 import { taxonName } from "../domain/taxonomy";
 import { cropById, cropName, stageFor } from "../modules/farm/cropEngine";
 import { formatIsoDate, percent, relativeTime } from "../lib/format";
@@ -134,17 +134,14 @@ export function HomeScreen() {
   const { t, lang } = useT();
   const location = useAppStore((s) => s.location);
   const [setupDismissed, setSetupDismissed] = useState(false);
+  const place = locationLabel(location, t, lang);
 
   return (
     <div className="flex flex-col gap-4 max-w-5xl mx-auto w-full px-4 py-4 sm:py-6">
       <header>
         <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-soil-900">{t("home.greeting")}</h1>
         <p className="text-soil-600 text-sm">
-          {location?.district
-            ? t("home.nearYou", { place: districtName(location.district, lang) })
-            : location?.coords
-              ? t("home.nearYou", { place: `${location.coords.lat}, ${location.coords.lng}` })
-              : t("home.tagline")}
+          {place.kind === "district" ? t("home.nearYou", { place: place.text }) : place.kind === "gps" ? place.text : t("home.tagline")}
         </p>
       </header>
 

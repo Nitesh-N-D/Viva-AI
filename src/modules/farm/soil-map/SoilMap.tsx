@@ -283,7 +283,13 @@ export function SoilMap() {
       {tiles?.status === "not_configured" && <Notice tone="info">{t("map.notConfigured")}</Notice>}
       {tiles?.status === "error" && (
         <Notice tone="error" title={t("map.loadError")} action={<Button size="sm" variant="secondary" onClick={() => void loadAll()}>{t("common.retry")}</Button>}>
-          <span className="font-mono text-xs break-all">{tiles.message}</span>
+          <p>{t("errors.unexpected")}</p>
+          {tiles.message && (
+            <details className="mt-2 text-xs" data-no-read>
+              <summary className="cursor-pointer">{t("errors.details")}</summary>
+              <span className="font-mono break-all">{tiles.message}</span>
+            </details>
+          )}
         </Notice>
       )}
       {!isFirebaseConfigured && <p className="text-xs text-soil-500">{t("map.signInNeeded")}</p>}

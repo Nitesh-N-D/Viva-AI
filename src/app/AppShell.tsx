@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLangStore, useT } from "../i18n";
-import { districtName } from "../domain/districts";
-import { navigate, type Route, type RouteName } from "./router";
+import { voiceEngine } from "../shared/voice/VoiceEngine";
+import { ReadAloudBar, ReadAloudButton } from "../shared/voice/ReadAloud";
+import { locationLabel } from "./locationLabel";
+import { navigate, routeToHash, type Route, type RouteName } from "./router";
 import { useAppStore } from "./store";
 import { useSyncStatus } from "./useSync";
 
@@ -11,7 +13,8 @@ interface NavItem {
   icon: string;
   labelKey:
     | "nav.home"
-    | "nav.scan"
+    | "nav.soilScan"
+    | "nav.diseaseScan"
     | "nav.market"
     | "nav.map"
     | "nav.maker"
@@ -24,29 +27,38 @@ interface NavItem {
     | "nav.watchlist";
 }
 
+const HOME: NavItem = { route: { name: "home" }, match: ["home"], icon: "🏠", labelKey: "nav.home" };
+const SOIL: NavItem = { route: { name: "soil" }, match: ["soil"], icon: "🟫", labelKey: "nav.soilScan" };
+// Guidance pages are opened from a disease result, so they keep Disease Scan highlighted.
+const DISEASE: NavItem = { route: { name: "disease" }, match: ["disease", "guidance"], icon: "🍃", labelKey: "nav.diseaseScan" };
+const MARKET: NavItem = { route: { name: "market" }, match: ["market"], icon: "₹", labelKey: "nav.market" };
+const ASSISTANT: NavItem = { route: { name: "assistant" }, match: ["assistant"], icon: "💬", labelKey: "nav.assistant" };
+const SETTINGS: NavItem = { route: { name: "settings" }, match: ["settings"], icon: "⚙️", labelKey: "nav.settings" };
+
 // Full list for the sidebar (md and up).
-const NAV: NavItem[] = [
-  { route: { name: "home" }, match: ["home", "settings"], icon: "🏠", labelKey: "nav.home" },
-  { route: { name: "soil" }, match: ["soil", "disease", "guidance"], icon: "📷", labelKey: "nav.scan" },
+export const NAV: NavItem[] = [
+  HOME,
+  SOIL,
+  DISEASE,
   { route: { name: "planner" }, match: ["planner"], icon: "🗓️", labelKey: "nav.planner" },
   { route: { name: "crops", soil: null }, match: ["crops", "farm"], icon: "🌾", labelKey: "nav.crops" },
   { route: { name: "irrigation" }, match: ["irrigation"], icon: "💧", labelKey: "nav.water" },
-  { route: { name: "market" }, match: ["market"], icon: "₹", labelKey: "nav.market" },
+  MARKET,
   { route: { name: "watchlist" }, match: ["watchlist"], icon: "🔔", labelKey: "nav.watchlist" },
   { route: { name: "finance" }, match: ["finance"], icon: "📒", labelKey: "nav.finance" },
-  { route: { name: "assistant" }, match: ["assistant"], icon: "💬", labelKey: "nav.assistant" },
+  ASSISTANT,
   { route: { name: "map" }, match: ["map"], icon: "🗺️", labelKey: "nav.map" },
   { route: { name: "maker" }, match: ["maker"], icon: "🔧", labelKey: "nav.maker" },
+  SETTINGS,
 ];
 
 // Five most-used destinations for the mobile bottom bar; the rest are on the home dashboard and sidebar.
-const MOBILE_NAV: NavItem[] = [
-  NAV[0],
-  { ...NAV[1] },
-  NAV[2],
-  { ...NAV[5], match: ["market", "watchlist"] },
-  NAV[8],
-];
+export const MOBILE_NAV: NavItem[] = [HOME, SOIL, DISEASE, { ...MARKET, match: ["market", "watchlist"] }, ASSISTANT];
+
+/** True when `item` is the nav entry for the current route. Exactly one sidebar item is active per route. */
+export function isNavActive(item: NavItem, routeName: RouteName): boolean {
+  return item.match.includes(routeName);
+}
 
 function SyncIndicator() {
   const { t } = useT();
@@ -87,11 +99,14 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
   const setLang = useLangStore((s) => s.setLang);
   const location = useAppStore((s) => s.location);
   const online = useSyncStatus().online;
-  const placeLabel = location?.district
-    ? districtName(location.district, lang)
-    : location?.coords
-      ? t("home.nearYou")
-      : t("home.setLocation");
+  const place = locationLabel(location, t, lang);
+  const routeKey = routeToHash(route);
+
+  // Reading never carries over to another page or language, and stops if the shell unmounts.
+  useEffect(() => {
+    voiceEngine.stop();
+  }, [routeKey, lang]);
+  useEffect(() => () => voiceEngine.stop(), []);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-soil-50">
@@ -113,8 +128,8 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
           <p className="text-xs text-soil-500 mt-0.5">{t("tagline")}</p>
         </div>
         <ul className="flex flex-col gap-0.5 px-3 overflow-y-auto pb-4">
-          {[...NAV, { route: { name: "settings" } as Route, match: ["settings"] as RouteName[], icon: "⚙️", labelKey: "nav.settings" as const }].map((item) => {
-            const active = item.match.includes(route.name) && !(item.labelKey === "nav.home" && route.name === "settings");
+          {NAV.map((item) => {
+            const active = isNavActive(item, route.name);
             return (
               <li key={item.labelKey}>
                 <button
@@ -150,13 +165,15 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
               type="button"
               onClick={() => navigate({ name: "settings" })}
               className="inline-flex items-center gap-1 min-h-[44px] px-2 rounded-tile text-sm text-soil-700 hover:bg-soil-100 truncate max-w-[45vw]"
-              aria-label={t("home.changeLocation")}
+              aria-label={`${place.text}. ${place.kind === "unset" ? t("home.setLocation") : t("home.changeLocation")}`}
+              data-location-kind={place.kind}
             >
               <span aria-hidden="true">📍</span>
-              <span className="truncate">{placeLabel}</span>
+              <span className="truncate">{place.text}</span>
             </button>
             <div className="flex-1" />
             <SyncIndicator />
+            <ReadAloudButton />
             <button
               type="button"
               onClick={() => setLang(lang === "ta" ? "en" : "ta")}
@@ -187,11 +204,13 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
         </main>
       </div>
 
+      <ReadAloudBar />
+
       {/* Bottom navigation (mobile) */}
       <nav aria-label={t("nav.label")} className="no-print md:hidden fixed bottom-0 inset-x-0 z-[600] bg-white border-t border-soil-100 pb-[env(safe-area-inset-bottom)]">
         <ul className="grid grid-cols-5">
           {MOBILE_NAV.map((item) => {
-            const active = item.match.includes(route.name) && !(item.labelKey === "nav.home" && route.name === "settings");
+            const active = isNavActive(item, route.name);
             return (
               <li key={item.labelKey}>
                 <button

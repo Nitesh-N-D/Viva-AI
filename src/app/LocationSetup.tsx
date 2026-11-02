@@ -6,7 +6,14 @@ import { SelectField } from "../shared/ui/Field";
 import { Notice } from "../shared/ui/Feedback";
 import { useAppStore, type AppLocation } from "./store";
 
-type GpsState = "idle" | "locating" | "denied" | "unavailable" | "unsupported";
+type GpsState = "idle" | "locating" | "denied" | "timeout" | "unavailable" | "unsupported";
+
+/** GeolocationPositionError code → UI state (1 denied, 2 unavailable, 3 timeout). */
+export function gpsErrorState(code: number): GpsState {
+  if (code === 1) return "denied";
+  if (code === 3) return "timeout";
+  return "unavailable";
+}
 
 /**
  * Location picker shared by first-run setup and Settings. GPS is optional:
@@ -25,20 +32,30 @@ export function LocationSetup({ onDone, compact }: { onDone?: () => void; compac
   }
 
   function useGps() {
-    if (!("geolocation" in navigator)) {
+    // Geolocation needs a secure context (https or localhost).
+    if (typeof navigator === "undefined" || !("geolocation" in navigator) || (typeof window !== "undefined" && window.isSecureContext === false)) {
       setGps("unsupported");
       return;
     }
     setGps("locating");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGps("idle");
-        // Stored rounded to ~1 km by the store; the raw fix is not kept.
-        save({ district: district || null, coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }, source: "gps" });
-      },
-      (err) => setGps(err.code === err.PERMISSION_DENIED ? "denied" : "unavailable"),
-      { timeout: 10_000, maximumAge: 10 * 60_000, enableHighAccuracy: false }
-    );
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
+            setGps("unavailable");
+            return;
+          }
+          setGps("idle");
+          // Stored rounded to ~1 km by the store; the raw fix is not kept.
+          save({ district: district || null, coords: { lat: latitude, lng: longitude }, source: "gps" });
+        },
+        (err) => setGps(gpsErrorState(err.code)),
+        { timeout: 10_000, maximumAge: 10 * 60_000, enableHighAccuracy: false }
+      );
+    } catch {
+      setGps("unavailable");
+    }
   }
 
   return (
@@ -48,7 +65,12 @@ export function LocationSetup({ onDone, compact }: { onDone?: () => void; compac
       <Button onClick={useGps} disabled={gps === "locating"} variant="secondary" icon="📍" block>
         {gps === "locating" ? t("onboarding.locating") : t("onboarding.useLocation")}
       </Button>
-      {gps === "denied" && <Notice tone="warning">{t("onboarding.locationDenied")}</Notice>}
+      {gps === "denied" && (
+        <Notice tone="warning" title={t("onboarding.locationDenied")}>
+          {t("location.deniedHelp")}
+        </Notice>
+      )}
+      {gps === "timeout" && <Notice tone="warning">{t("location.timeout")}</Notice>}
       {gps === "unavailable" && <Notice tone="warning">{t("onboarding.locationError")}</Notice>}
       {gps === "unsupported" && <Notice tone="warning">{t("onboarding.locationUnsupported")}</Notice>}
 

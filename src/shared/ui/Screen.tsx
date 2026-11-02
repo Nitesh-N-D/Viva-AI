@@ -1,21 +1,22 @@
 import React from "react";
-import { voiceEngine } from "../voice/VoiceEngine";
 import { useT } from "../../i18n";
 
 interface ScreenProps {
   title: string;
   subtitle?: string;
-  /** Narration for the "read aloud" button; omit to hide the button. */
-  speakText?: string;
   onBack?: () => void;
   actions?: React.ReactNode;
   children: React.ReactNode;
   wide?: boolean;
 }
 
-/** Page header + content column used by every screen inside the AppShell. */
-export function Screen({ title, subtitle, speakText, onBack, actions, children, wide }: ScreenProps) {
-  const { t, lang } = useT();
+/**
+ * Page header + content column used by every screen inside the AppShell.
+ * Reading the screen aloud is handled globally by the header's read-aloud
+ * button (shared/voice/ReadAloud), which reads everything visible here.
+ */
+export function Screen({ title, subtitle, onBack, actions, children, wide }: ScreenProps) {
+  const { t } = useT();
   return (
     <div className={`mx-auto w-full ${wide ? "max-w-6xl" : "max-w-3xl"} px-4 pb-6`}>
       <div className="flex items-start gap-2 pt-4 pb-3">
@@ -34,17 +35,6 @@ export function Screen({ title, subtitle, speakText, onBack, actions, children, 
           {subtitle && <p className="text-sm text-soil-600 mt-0.5">{subtitle}</p>}
         </div>
         {actions}
-        {speakText && voiceEngine.canSpeak() && (
-          <button
-            type="button"
-            onClick={() => void voiceEngine.speak(speakText, lang)}
-            className="min-w-[44px] min-h-[44px] rounded-tile text-xl hover:bg-soil-100"
-            aria-label={t("common.speakScreen")}
-            title={t("common.speakScreen")}
-          >
-            <span aria-hidden="true">🔊</span>
-          </button>
-        )}
       </div>
       <div className="flex flex-col gap-4">{children}</div>
     </div>

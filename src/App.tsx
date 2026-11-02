@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { useT } from "./i18n";
+import { t as translate, useT } from "./i18n";
 import { AppShell } from "./app/AppShell";
 import { HomeScreen } from "./app/HomeScreen";
 import { SettingsScreen } from "./app/SettingsScreen";
@@ -9,24 +9,24 @@ import { Spinner } from "./shared/ui/Feedback";
 
 // Feature screens are split into their own chunks so the first load on a
 // slow rural connection only downloads the shell and dashboard.
-const ScanScreen = lazy(() => import("./modules/farm/scan/ScanScreen").then((m) => ({ default: m.ScanScreen })));
-const GuidanceScreen = lazy(() => import("./modules/farm/guidance/GuidanceScreen").then((m) => ({ default: m.GuidanceScreen })));
-const CropRecommend = lazy(() => import("./modules/farm/crop-recommend/CropRecommend").then((m) => ({ default: m.CropRecommend })));
-const MyCrop = lazy(() => import("./modules/farm/my-crop/MyCrop").then((m) => ({ default: m.MyCrop })));
-const MandiPrices = lazy(() => import("./modules/farm/mandi-prices/MandiPrices").then((m) => ({ default: m.MandiPrices })));
-const SoilMap = lazy(() => import("./modules/farm/soil-map/SoilMap").then((m) => ({ default: m.SoilMap })));
-const FabricationHome = lazy(() => import("./modules/fabrication/FabricationHome").then((m) => ({ default: m.FabricationHome })));
-const PlannerScreen = lazy(() => import("./modules/planner/PlannerScreen").then((m) => ({ default: m.PlannerScreen })));
-const FinanceScreen = lazy(() => import("./modules/finance/FinanceScreen").then((m) => ({ default: m.FinanceScreen })));
-const IrrigationScreen = lazy(() => import("./modules/irrigation/IrrigationScreen").then((m) => ({ default: m.IrrigationScreen })));
-const AssistantScreen = lazy(() => import("./modules/assistant/AssistantScreen").then((m) => ({ default: m.AssistantScreen })));
-const WatchlistScreen = lazy(() => import("./modules/watchlist/WatchlistScreen").then((m) => ({ default: m.WatchlistScreen })));
-import { installGlobalErrorHandlers } from "./lib/errors";
+const ScanScreen = lazy(() => importWithRetry(() => import("./modules/farm/scan/ScanScreen").then((m) => ({ default: m.ScanScreen }))));
+const GuidanceScreen = lazy(() => importWithRetry(() => import("./modules/farm/guidance/GuidanceScreen").then((m) => ({ default: m.GuidanceScreen }))));
+const CropRecommend = lazy(() => importWithRetry(() => import("./modules/farm/crop-recommend/CropRecommend").then((m) => ({ default: m.CropRecommend }))));
+const MyCrop = lazy(() => importWithRetry(() => import("./modules/farm/my-crop/MyCrop").then((m) => ({ default: m.MyCrop }))));
+const MandiPrices = lazy(() => importWithRetry(() => import("./modules/farm/mandi-prices/MandiPrices").then((m) => ({ default: m.MandiPrices }))));
+const SoilMap = lazy(() => importWithRetry(() => import("./modules/farm/soil-map/SoilMap").then((m) => ({ default: m.SoilMap }))));
+const FabricationHome = lazy(() => importWithRetry(() => import("./modules/fabrication/FabricationHome").then((m) => ({ default: m.FabricationHome }))));
+const PlannerScreen = lazy(() => importWithRetry(() => import("./modules/planner/PlannerScreen").then((m) => ({ default: m.PlannerScreen }))));
+const FinanceScreen = lazy(() => importWithRetry(() => import("./modules/finance/FinanceScreen").then((m) => ({ default: m.FinanceScreen }))));
+const IrrigationScreen = lazy(() => importWithRetry(() => import("./modules/irrigation/IrrigationScreen").then((m) => ({ default: m.IrrigationScreen }))));
+const AssistantScreen = lazy(() => importWithRetry(() => import("./modules/assistant/AssistantScreen").then((m) => ({ default: m.AssistantScreen }))));
+const WatchlistScreen = lazy(() => importWithRetry(() => import("./modules/watchlist/WatchlistScreen").then((m) => ({ default: m.WatchlistScreen }))));
+import { importWithRetry, installGlobalErrorHandlers } from "./lib/errors";
 import { useTaskReminders } from "./modules/planner/useTaskReminders";
 import { ensureAnonymousAuth, isFirebaseConfigured, writeQueuedItem } from "./lib/firebase";
 import { registerAutoFlush } from "./shared/offline-sync/SyncQueue";
 import { ErrorBoundary } from "./shared/ui/ErrorBoundary";
-import { Toaster } from "./shared/ui/Toast";
+import { Toaster, toast } from "./shared/ui/Toast";
 
 function RouteView({ route }: { route: Route }) {
   switch (route.name) {
@@ -72,8 +72,17 @@ export default function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  // Unhandled promise rejections are logged (redacted) instead of vanishing.
-  useEffect(() => installGlobalErrorHandlers(), []);
+  // Unhandled errors are logged (redacted) and surfaced as one friendly toast,
+  // at most every 10 s, instead of vanishing silently.
+  useEffect(() => {
+    let last = 0;
+    installGlobalErrorHandlers(() => {
+      const now = Date.now();
+      if (now - last < 10_000) return;
+      last = now;
+      toast.error(translate("errors.unexpected"));
+    });
+  }, []);
   // In-app task reminders while the app is open (no background push).
   useTaskReminders();
 
