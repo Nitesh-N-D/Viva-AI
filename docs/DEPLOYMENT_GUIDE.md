@@ -81,8 +81,25 @@ No new GitHub secret is needed: the app calls
   unknown fields are rejected.
 - The key is sent to Google only in the `x-goog-api-key` header and is never
   returned. Retries with exponential backoff on 5xx/timeouts, falls back to
-  the next model on 404/429/503, never retries 400/401/403 or blocked answers.
+  the next model on 400/404/429/503, never retries 401/403 or blocked answers.
+- Any `<app_data>` block the model echoes or invents is removed from the answer.
 - Per-client rate limit (per isolate).
+
+Worker code changes (anything in `src/server/` or `server/mandi-worker/`) reach
+production only after `npx wrangler@4 deploy --config server/mandi-worker/wrangler.toml`.
+CI deploys the Firebase site, not the Worker. Check `npx wrangler@4 whoami` first;
+the existing secrets stay in place across deploys, so do not re-enter them.
+
+## 1c. Background notifications
+
+The service worker is built from `src/sw.ts` (vite-plugin-pwa `injectManifest`).
+When notification permission is granted, the app registers a Periodic Background
+Sync (`viva-background-checks`, minimum interval 12 h). The browser runs it only for
+an **installed** PWA in Chromium browsers, at times it chooses. The check marks due
+planner tasks and re-checks stale price watches through the same mandi proxy, then
+shows a notification. Nothing needs to be deployed for this beyond the site itself.
+Notification text is cached in the current language (Cache Storage `viva-meta`)
+whenever the app is open.
 
 Never create a `VITE_GEMINI_API_KEY`: `VITE_` values are public. If one
 exists in an old `.env`, the dev server still reads it, but rename it.

@@ -3,7 +3,9 @@
  *
  * Observations are recorded ONLY from records the app actually received from
  * the mandi price service (live or a saved copy of a real fetch). Alerts are
- * evaluated in the app after a fetch; there are no background push alerts.
+ * evaluated after a fetch, in the open app or in the service worker's
+ * Periodic Background Sync check (src/sw.ts) where the browser offers it.
+ * There is no server push.
  */
 import type { MandiRecord } from "../../lib/mandi";
 import type { PriceObservation, WatchAlert, WatchItem } from "../../lib/localDb";

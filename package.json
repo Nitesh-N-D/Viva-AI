@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
+    "e2e": "playwright test",
     "model:import": "vite-node scripts/import-model.ts import",
     "model:rollback": "vite-node scripts/import-model.ts rollback",
     "train:cloud": "node scripts/cloud-train.mjs",
@@ -25,6 +26,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@types/leaflet": "^1.9.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

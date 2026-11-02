@@ -16,16 +16,16 @@ on the Spark plan, and on-device TensorFlow.js. The only server code is a small 
 | Tomato leaf condition scan | Working | MobileNetV2 trained on Kaggle GPU, test accuracy 0.93 on lab photos (field accuracy unmeasured). Bilingual guidance for all 10 classes. |
 | Crop suggestions | Working | An explainable, deterministic rule engine over soil, season, water, pH and duration, **not ML**. Each score is broken into per-check results, and the 5-day rain forecast only raises timing risks. |
 | Weather | Working with `VITE_OPENWEATHER_API_KEY` | Shows the source (live/cached) and its age. With no key it says so. There is no mock data. |
-| Mandi prices | Working through the server-side proxy | data.gov.in Agmarknet daily prices (state → district → market → commodity). The key stays on the server. Arrival date and source are shown; there is no mock data. |
-| Farm planner | Working | Crop calendar generated from sowing date and crop duration, with in-app reminders. Stored on the device. |
+| Mandi prices | Working locally; **production blocked upstream** | data.gov.in Agmarknet daily prices (state → district → market → commodity). The key stays on the server. Arrival date and source are shown; there is no mock data. On 2026-11-02 data.gov.in refused connections from the Cloudflare Worker (521/523), so production shows "price service returned an error". See [KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md). |
+| Farm planner | Working | Crop calendar generated from sowing date and crop duration. Reminders appear in the app and as system notifications, plus background checks on installed Chromium PWAs (Periodic Background Sync). Stored on the device. |
 | Expense / income tracker | Working | INR entries per crop, profit reports, charts and CSV export. Stored on the device. |
 | Irrigation advisor | Working | FAO-56 Hargreaves estimate from weather and crop stage, clearly labelled as an estimate (no sensors). |
-| Farming assistant | Working when the AI proxy is deployed | Gemini, Tamil or English, with voice input. Called only through the server-side proxy. |
-| Mandi watchlist | Working | Saved commodity/market pairs with in-app price alerts based on prices actually fetched. |
+| Farming assistant | Working in production | Gemini, Tamil or English, with conversation history and voice input. Called only through the Worker's `/ai/generate` (verified live 2026-11-02). |
+| Mandi watchlist | Working (needs mandi data) | Saved commodity/market pairs with price alerts based on prices actually fetched, in the app and in background checks where supported. |
 | Community soil map | Working with Firebase | Leaflet map of ~1 km tiles. Star ratings and reviews appear inside each marker popup. One rating per user per tile is enforced by Firestore rules. |
 | Fabrication drawings | Working | Parametric, dimension-validated technical drawings with SVG/PNG download and print-to-PDF. Drawings are built by escaping, never with `innerHTML`. |
 | Offline | Working | The PWA app shell is precached. Writes go to an IndexedDB queue with idempotency keys and backoff. |
-| Language and voice | Working | Tamil (default) and English, with every key translated. Voice uses the Web Speech API where the browser supports it. |
+| Language and voice | Working | Tamil (default) and English, with every key translated. "Read this page aloud" on every screen, with pause, resume, next, restart and stop. Uses the device's speech voices; when no Tamil voice is installed the app says so and offers English. Voice input uses the Web Speech API where supported. |
 
 ## Quick start
 
@@ -37,8 +37,9 @@ npm run dev
 
 ```bash
 npm run typecheck   # tsc -b
-npm test            # Vitest: 13 files, 158 tests
-npm run build       # production build + service worker
+npm test            # Vitest: 14 files, 167 tests
+npm run build       # production build + custom service worker (src/sw.ts)
+npm run e2e         # Playwright smoke tests on installed Edge (12 tests, network mocked)
 ```
 
 ## Architecture
@@ -54,7 +55,9 @@ src/
   modules/{planner,finance,irrigation,assistant,watchlist}/  the five farm tools (IndexedDB via lib/farmRepo.ts)
   lib/ai/         browser client for the Gemini proxy
   server/         mandi and Gemini proxies, shared by the Vite dev server and the Worker
-  shared/         ui components, voice engine, offline sync queue
+  shared/         ui components, voice engine + read-aloud, notifications, offline sync queue
+  sw.ts           service worker: precache, runtime caches, Periodic Background Sync checks
+e2e/                  Playwright smoke tests
   i18n/           ta.json, en.json
 packages/ml-models/   cloud GPU training notebooks (Kaggle/Colab only)
 scripts/              notebook generator, Kaggle launcher, model import/rollback

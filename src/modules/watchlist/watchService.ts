@@ -5,7 +5,10 @@
  * has its own cache: a saved copy younger than 30 minutes is reused, so
  * checking does not hammer the API. There is no polling timer: checks run
  * when the farmer opens the watchlist (if the last check is old), presses
- * "check now", or loads matching prices on the mandi screen.
+ * "check now", or loads matching prices on the mandi screen, and in the
+ * service worker's periodic background check where the browser supports it
+ * (src/sw.ts). The service worker has no localStorage, so there it always
+ * fetches; needsRecheck() still limits it to stale items.
  */
 import { getMandiPrices, type MandiFilter, type MandiResult } from "../../lib/mandi";
 import { addAlerts, listObservations, listWatch, putObservations, putWatch } from "../../lib/farmRepo";

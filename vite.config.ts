@@ -140,27 +140,19 @@ export default defineConfig(({ mode }) => {
           { src: "icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
-      workbox: {
+      // Own service worker (src/sw.ts): same precache and runtime caches as
+      // the generated one had, plus Periodic Background Sync handling for
+      // task reminders and price alerts and notification clicks.
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectManifest: {
         // The app shell only. Model weights live under /models/ and are
-        // cached on first use by the runtime rule below, so a missing or
-        // large model never bloats or breaks the precache manifest.
+        // cached on first use by the runtime rule in src/sw.ts, so a missing
+        // or large model never bloats or breaks the precache manifest.
         globPatterns: ["**/*.{js,css,html,svg,png,ico,mp3}"],
         globIgnores: ["models/**"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith("/models/"),
-            handler: "NetworkFirst",
-            options: { cacheName: "viva-model-cache", networkTimeoutSeconds: 8 },
-          },
-          {
-            // Second, network-level cache layer behind the app-level
-            // localStorage caches in src/lib/weather.ts and src/lib/mandi.ts.
-            urlPattern: /^https:\/\/api\.openweathermap\.org\//,
-            handler: "NetworkFirst",
-            options: { cacheName: "viva-weather-cache", networkTimeoutSeconds: 5 },
-          },
-        ],
       },
     }),
   ],

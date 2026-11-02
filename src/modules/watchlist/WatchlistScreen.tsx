@@ -18,6 +18,7 @@ import { Badge, EmptyState, Notice, Skeleton } from "../../shared/ui/Feedback";
 import { InputField, SelectField } from "../../shared/ui/Field";
 import { ErrorNotice } from "../../shared/ui/ErrorNotice";
 import { toast } from "../../shared/ui/Toast";
+import { showAppNotification } from "../../shared/notify/notify";
 
 /** The mandi screen can pre-fill a new watch through sessionStorage. */
 export const WATCH_PREFILL_KEY = "viva-ai:watch-prefill";
@@ -213,7 +214,12 @@ export function WatchlistScreen() {
     const pre = readPrefill();
     if (pre) setAdding(pre);
     void checkStale(online)
-      .then((created) => created.length && toast.info(t("watchlist.newAlerts", { n: created.length })))
+      .then((created) => {
+        if (!created.length) return;
+        const msg = t("watchlist.newAlerts", { n: created.length });
+        toast.info(msg);
+        void showAppNotification(msg, { tag: "viva-price-alerts", route: "#/watchlist" });
+      })
       .catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

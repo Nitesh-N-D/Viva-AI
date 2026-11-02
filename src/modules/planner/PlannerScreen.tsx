@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useT } from "../../i18n";
 import { CROPS, CROP_SOURCE, cropById, cropName } from "../farm/cropEngine";
 import { formatIsoDate } from "../../lib/format";
 import { deletePlan, deleteTask, listPlans, listTasks, putTask, savePlanWithTasks, useDbQuery } from "../../lib/farmRepo";
 import { downloadText, newId, toCsv, todayIso, type FarmPlan, type FarmTask, type TaskCategory } from "../../lib/localDb";
 import { generateTasks, groupTasks, validateTaskInput, type TaskBucket } from "./plannerLogic";
-import { notificationsSupported } from "./useTaskReminders";
+import { enableBackgroundChecks, notificationsSupported, type BackgroundStatus } from "../../shared/notify/notify";
 import { useAppStore } from "../../app/store";
 import { Screen } from "../../shared/ui/Screen";
 import { Card } from "../../shared/ui/Card";
@@ -191,6 +191,7 @@ export function PlannerScreen() {
   const [editing, setEditing] = useState<FarmTask | null | "new">(null);
   const [confirmDelete, setConfirmDelete] = useState<FarmPlan | null>(null);
   const [perm, setPerm] = useState(() => (notificationsSupported() ? Notification.permission : "unsupported"));
+  const [bg, setBg] = useState<BackgroundStatus | null>(null);
   const today = todayIso();
 
   const visible = useMemo(() => tasks.data.filter((x) => !planFilter || x.planId === planFilter), [tasks.data, planFilter]);
@@ -214,6 +215,15 @@ export function PlannerScreen() {
       toast.error(t("errors.storage"));
     }
   };
+
+  useEffect(() => {
+    if (perm !== "granted") return;
+    let live = true;
+    void enableBackgroundChecks().then((s) => live && setBg(s));
+    return () => {
+      live = false;
+    };
+  }, [perm]);
 
   const askPermission = async () => {
     if (!notificationsSupported()) return;
@@ -297,6 +307,11 @@ export function PlannerScreen() {
         <Notice tone="info" action={perm === "default" ? <Button size="sm" variant="secondary" onClick={() => void askPermission()}>{t("planner.enableReminders")}</Button> : undefined}>
           {perm === "denied" ? t("planner.remindersDenied") : t("planner.remindersInfo")}
         </Notice>
+      )}
+      {perm === "granted" && bg && tasks.data.length > 0 && (
+        <p className="text-xs text-soil-600" role="status">
+          {bg === "enabled" ? t("planner.bgEnabled") : bg === "needs_install" ? t("planner.bgNeedsInstall") : t("planner.bgUnsupported")}
+        </p>
       )}
 
       {tasks.loading ? (

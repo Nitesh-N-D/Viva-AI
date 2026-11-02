@@ -12,7 +12,7 @@ import {
 } from "../modules/irrigation/irrigationLogic";
 import { evaluateAlerts, latestByMarket, needsRecheck, observationsFrom, validateWatch, RECHECK_MS } from "../modules/watchlist/watchlistLogic";
 import { AppError, classifyError, isRetryable, kindFromStatus, recoveryFor } from "../lib/errors";
-import { geminiModels, handleAiProxy, interpretGemini, validateAiRequest, DEFAULT_MODELS } from "../server/aiProxy";
+import { cleanAnswer, geminiModels, handleAiProxy, interpretGemini, validateAiRequest, DEFAULT_MODELS } from "../server/aiProxy";
 import type { FarmPlan, FarmTask, FinanceEntry, WatchItem } from "../lib/localDb";
 import type { MandiRecord } from "../lib/mandi";
 
@@ -338,6 +338,28 @@ describe("AI proxy", () => {
     const r = await handleAiProxy(ask(), "c", { apiKey: "k", fetch: vi.fn(), limiter: { take: () => false } });
     expect(r.status).toBe(429);
     expect(r.headers["retry-after"]).toBe("60");
+  });
+
+  it("falls back to the next model on an upstream 400, and stops after the last model", async () => {
+    const fetch = vi.fn().mockResolvedValueOnce(res(400, {})).mockResolvedValueOnce(res(200, okBody("ok")));
+    const r = await handleAiProxy(ask(), "c", { apiKey: "k", fetch, models: ["m1", "m2"], sleep: async () => {} });
+    expect(r.status).toBe(200);
+    expect((r.body as { model: string }).model).toBe("m2");
+    const always400 = vi.fn(async () => res(400, {}));
+    const r2 = await handleAiProxy(ask(), "c", { apiKey: "k", fetch: always400, models: ["m1", "m2"], sleep: async () => {} });
+    expect(always400).toHaveBeenCalledTimes(2);
+    expect(r2.status).toBe(400);
+    expect(r2.body).toMatchObject({ error: "bad_request" });
+  });
+
+  it("strips echoed or invented <app_data> blocks from answers", () => {
+    expect(cleanAnswer("<app_data>\nModel prediction: Blight\nConfidence: 60%\n</app_data>\n\nSuggestion: remove infected leaves.")).toBe(
+      "Suggestion: remove infected leaves."
+    );
+    expect(cleanAnswer("Answer first.\n<app_data>unterminated")).toBe("Answer first.");
+    expect(cleanAnswer("plain answer")).toBe("plain answer");
+    const only = interpretGemini(200, { candidates: [{ content: { parts: [{ text: "<app_data>x</app_data>" }] } }] }, "m");
+    expect(only).toMatchObject({ ok: false, code: "malformed" });
   });
 
   it("puts a configured model first", () => {
