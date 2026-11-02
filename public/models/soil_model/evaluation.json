@@ -1,0 +1,162 @@
+{
+  "task": "soil",
+  "split": "test",
+  "testSamples": 83,
+  "testAccuracy": 0.8072289156626506,
+  "macroF1": 0.7252846446925394,
+  "accuracy95CI": [
+    0.7108433734939759,
+    0.8795180722891566
+  ],
+  "macroF1_95CI": [
+    0.5958225018117638,
+    0.8210774758689222
+  ],
+  "validationAccuracy": 0.8192771084337349,
+  "validationSamples": 83,
+  "perClass": {
+    "alluvial": {
+      "precision": 0.2727272727272727,
+      "recall": 0.6,
+      "f1": 0.375,
+      "support": 5
+    },
+    "black": {
+      "precision": 0.9393939393939394,
+      "recall": 0.9393939393939394,
+      "f1": 0.9393939393939394,
+      "support": 33
+    },
+    "laterite": {
+      "precision": 0.8461538461538461,
+      "recall": 0.7096774193548387,
+      "f1": 0.7719298245614035,
+      "support": 31
+    },
+    "red": {
+      "precision": 0.8461538461538461,
+      "recall": 0.7857142857142857,
+      "f1": 0.8148148148148148,
+      "support": 14
+    }
+  },
+  "confusionMatrix": {
+    "labels": [
+      "alluvial",
+      "black",
+      "laterite",
+      "red"
+    ],
+    "rows_true_cols_pred": [
+      [
+        3,
+        0,
+        2,
+        0
+      ],
+      [
+        1,
+        31,
+        1,
+        0
+      ],
+      [
+        6,
+        1,
+        22,
+        2
+      ],
+      [
+        1,
+        1,
+        1,
+        11
+      ]
+    ]
+  },
+  "fractionBelowMinConfidence": 0.0963855421686747,
+  "minConfidence": 0.6,
+  "misclassifiedExamples": [
+    {
+      "rel": "Orignal-Dataset/Alluvial_Soil/29.jpg",
+      "label": "alluvial",
+      "pred": "laterite"
+    },
+    {
+      "rel": "Orignal-Dataset/Alluvial_Soil/37.jpg",
+      "label": "alluvial",
+      "pred": "laterite"
+    },
+    {
+      "rel": "Orignal-Dataset/Black_Soil/117.jpg",
+      "label": "black",
+      "pred": "laterite"
+    },
+    {
+      "rel": "Orignal-Dataset/Black_Soil/138.jpg",
+      "label": "black",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/141.jpg",
+      "label": "laterite",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/148.jpg",
+      "label": "laterite",
+      "pred": "red"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/162a.jpg",
+      "label": "laterite",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/269.jpg",
+      "label": "laterite",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/32.jpg",
+      "label": "laterite",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/46.jpg",
+      "label": "laterite",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/5.jpg",
+      "label": "laterite",
+      "pred": "black"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/53.jpg",
+      "label": "laterite",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Laterite_Soil/72.jpg",
+      "label": "laterite",
+      "pred": "red"
+    },
+    {
+      "rel": "Orignal-Dataset/Red_Soil/32a.jpg",
+      "label": "red",
+      "pred": "alluvial"
+    },
+    {
+      "rel": "Orignal-Dataset/Red_Soil/53.jpg",
+      "label": "red",
+      "pred": "black"
+    },
+    {
+      "rel": "Orignal-Dataset/Red_Soil/66.jpg",
+      "label": "red",
+      "pred": "laterite"
+    }
+  ],
+  "note": "Scores are uncalibrated softmax outputs. Metrics are on a held-out, group-disjoint test split of the same dataset; field performance on farmer photos has not been measured."
+}

@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "task": "disease",
+  "status": "validated",
+  "modelVersion": "disease-mnv2-20261102T073346Z",
+  "modelName": "viva-disease-mobilenetv2",
+  "createdAt": "2026-11-02T08:04:14Z",
+  "architecture": "MobileNetV2 (ImageNet weights, alpha 1.0) + GlobalAveragePooling + Dropout + Dense softmax",
+  "input": {
+    "height": 224,
+    "width": 224,
+    "channels": 3,
+    "preprocessing": "mobilenet_v2"
+  },
+  "inputDetails": {
+    "colorOrder": "RGB",
+    "range": "[-1, 1] via x/127.5-1",
+    "resize": "long side <= 640 px, then bilinear stretch to 224x224 (align_corners=false, half_pixel_centers=false)"
+  },
+  "outputShape": [
+    null,
+    10
+  ],
+  "labels": [
+    "tomato_bacterial_spot",
+    "tomato_early_blight",
+    "tomato_healthy",
+    "tomato_late_blight",
+    "tomato_leaf_mold",
+    "tomato_septoria_leaf_spot",
+    "tomato_spider_mites",
+    "tomato_target_spot",
+    "tomato_mosaic_virus",
+    "tomato_yellow_leaf_curl_virus"
+  ],
+  "labelNames": {
+    "tomato_bacterial_spot": {
+      "en": "Bacterial spot (tomato)",
+      "ta": "பாக்டீரியா இலைப்புள்ளி (தக்காளி)"
+    },
+    "tomato_early_blight": {
+      "en": "Early blight (tomato)",
+      "ta": "முன் இலைக்கருகல் (தக்காளி)"
+    },
+    "tomato_healthy": {
+      "en": "Healthy tomato leaf",
+      "ta": "ஆரோக்கியமான தக்காளி இலை"
+    },
+    "tomato_late_blight": {
+      "en": "Late blight (tomato)",
+      "ta": "பின் இலைக்கருகல் (தக்காளி)"
+    },
+    "tomato_leaf_mold": {
+      "en": "Leaf mould (tomato)",
+      "ta": "இலைப் பூஞ்சணம் (தக்காளி)"
+    },
+    "tomato_septoria_leaf_spot": {
+      "en": "Septoria leaf spot (tomato)",
+      "ta": "செப்டோரியா இலைப்புள்ளி (தக்காளி)"
+    },
+    "tomato_spider_mites": {
+      "en": "Spider mite damage (tomato)",
+      "ta": "சிலந்திப் பேன் தாக்குதல் (தக்காளி)"
+    },
+    "tomato_target_spot": {
+      "en": "Target spot (tomato)",
+      "ta": "இலக்குப் புள்ளி நோய் (தக்காளி)"
+    },
+    "tomato_mosaic_virus": {
+      "en": "Mosaic virus (tomato)",
+      "ta": "தேமல் வைரஸ் (தக்காளி)"
+    },
+    "tomato_yellow_leaf_curl_virus": {
+      "en": "Yellow leaf curl virus (tomato)",
+      "ta": "மஞ்சள் இலைச்சுருள் வைரஸ் (தக்காளி)"
+    }
+  },
+  "minConfidence": 0.6,
+  "scoreType": "uncalibrated_softmax",
+  "training": {
+    "platform": "kaggle",
+    "accelerator": "Tesla T4, 15360 MiB, 14912 MiB, 580.178.04",
+    "dataset": "kaggle:kaustubhb999/tomatoleaf",
+    "datasetVersion": "kaggle-mounted",
+    "datasetLicense": "CC0: Public Domain (licence shown on the Kaggle dataset page, checked 2026-11-01)",
+    "notebook": "packages/ml-models/disease_classifier/train_colab.ipynb",
+    "runId": "20261102T073346Z",
+    "tensorflow": "2.20.0",
+    "durationSeconds": 1691,
+    "epochs": 49,
+    "config": {
+      "batch": 32,
+      "headEpochsMax": 25,
+      "fineTuneEpochsMax": 25,
+      "fineTuneLayers": 40,
+      "lrHead": 0.001,
+      "lrFineTune": 1e-05,
+      "dropout": 0.3,
+      "augmentation": {
+        "flip": true,
+        "rot90": true,
+        "brightness": 25,
+        "contrast": [
+          0.8,
+          1.2
+        ],
+        "saturation": [
+          0.85,
+          1.15
+        ],
+        "zoom": 0.8
+      },
+      "classWeights": "balanced",
+      "seed": 42,
+      "split": "StratifiedGroupKFold by near-duplicate group (~72/14/14)"
+    },
+    "splitCounts": {
+      "train": {
+        "tomato_bacterial_spot": 646,
+        "tomato_early_blight": 747,
+        "tomato_healthy": 772,
+        "tomato_late_blight": 780,
+        "tomato_leaf_mold": 748,
+        "tomato_septoria_leaf_spot": 762,
+        "tomato_spider_mites": 718,
+        "tomato_target_spot": 737,
+        "tomato_mosaic_virus": 672,
+        "tomato_yellow_leaf_curl_virus": 725
+      },
+      "val": {
+        "tomato_bacterial_spot": 130,
+        "tomato_early_blight": 151,
+        "tomato_healthy": 154,
+        "tomato_late_blight": 151,
+        "tomato_leaf_mold": 149,
+        "tomato_septoria_leaf_spot": 155,
+        "tomato_spider_mites": 144,
+        "tomato_target_spot": 147,
+        "tomato_mosaic_virus": 138,
+        "tomato_yellow_leaf_curl_virus": 146
+      },
+      "test": {
+        "tomato_bacterial_spot": 129,
+        "tomato_early_blight": 149,
+        "tomato_healthy": 157,
+        "tomato_late_blight": 157,
+        "tomato_leaf_mold": 148,
+        "tomato_septoria_leaf_spot": 152,
+        "tomato_spider_mites": 145,
+        "tomato_target_spot": 151,
+        "tomato_mosaic_virus": 140,
+        "tomato_yellow_leaf_curl_virus": 146
+      }
+    }
+  },
+  "evaluation": {
+    "file": "evaluation.json",
+    "testAccuracy": 0.9274,
+    "macroF1": 0.9276,
+    "testSamples": 1474
+  },
+  "artifactChecks": {
+    "problems": [],
+    "tfjsParityMaxAbsDiff": 2.4139881134033203e-06,
+    "minMacroF1Required": 0.9
+  },
+  "integrity": {
+    "group1-shard1of3.bin": "d8cdb421447f48f14f79c17459ede30b59b3a53cf69fe859e5585dc89096629e",
+    "group1-shard2of3.bin": "7b92eed54cd6d8674639872a6ef92bdbf3d6dad60f46668fe5dc50659fc10ea2",
+    "group1-shard3of3.bin": "2c0098dd7201fb94fd8a944cc3f3c56c49f0c3fc683264b3cf27f7b5ddaaa959"
+  },
+  "knownLimitations": [
+    "Tomato leaves only. Any other crop will be forced into one of the tomato classes; the app warns users about this.",
+    "PlantVillage photos are single detached leaves on a plain background under controlled light. Accuracy on field photos with soil, hands or several leaves is expected to be substantially lower than the reported test metrics.",
+    "Preliminary guidance only, not a diagnosis. Uncertain results should be confirmed by an agricultural extension officer."
+  ]
+}

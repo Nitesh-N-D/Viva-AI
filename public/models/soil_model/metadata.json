@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "task": "soil",
+  "status": "validated",
+  "modelVersion": "soil-mnv2-20261102T062949Z",
+  "modelName": "viva-soil-mobilenetv2",
+  "createdAt": "2026-11-02T06:35:41Z",
+  "architecture": "MobileNetV2 (ImageNet weights, alpha 1.0) + GlobalAveragePooling + Dropout + Dense softmax",
+  "input": {
+    "height": 224,
+    "width": 224,
+    "channels": 3,
+    "preprocessing": "mobilenet_v2"
+  },
+  "inputDetails": {
+    "colorOrder": "RGB",
+    "range": "[-1, 1] via x/127.5-1",
+    "resize": "long side <= 640 px, then bilinear stretch to 224x224 (align_corners=false, half_pixel_centers=false)"
+  },
+  "outputShape": [
+    null,
+    4
+  ],
+  "labels": [
+    "alluvial",
+    "black",
+    "laterite",
+    "red"
+  ],
+  "labelNames": {
+    "alluvial": {
+      "en": "Alluvial soil",
+      "ta": "வண்டல் மண்"
+    },
+    "black": {
+      "en": "Black soil",
+      "ta": "கருமண்"
+    },
+    "laterite": {
+      "en": "Laterite soil",
+      "ta": "லேட்டரைட் மண்"
+    },
+    "red": {
+      "en": "Red soil",
+      "ta": "செம்மண்"
+    }
+  },
+  "minConfidence": 0.6,
+  "scoreType": "uncalibrated_softmax",
+  "training": {
+    "platform": "kaggle",
+    "accelerator": "Tesla T4, 15360 MiB, 14912 MiB, 580.178.04",
+    "dataset": "kaggle:ai4a-lab/comprehensive-soil-classification-datasets",
+    "datasetVersion": "kaggle-mounted",
+    "datasetLicense": "CC BY-NC-SA 4.0 (licence shown on the Kaggle dataset page, checked 2026-11-01)",
+    "notebook": "packages/ml-models/soil_classifier/train_colab.ipynb",
+    "runId": "20261102T062949Z",
+    "tensorflow": "2.20.0",
+    "durationSeconds": 216,
+    "epochs": 24,
+    "config": {
+      "batch": 32,
+      "headEpochsMax": 25,
+      "fineTuneEpochsMax": 25,
+      "fineTuneLayers": 40,
+      "lrHead": 0.001,
+      "lrFineTune": 1e-05,
+      "dropout": 0.3,
+      "augmentation": {
+        "flip": true,
+        "rot90": true,
+        "brightness": 12,
+        "contrast": [
+          0.9,
+          1.1
+        ],
+        "saturation": [
+          0.95,
+          1.05
+        ],
+        "zoom": 0.85
+      },
+      "classWeights": "balanced",
+      "seed": 42,
+      "split": "StratifiedGroupKFold by near-duplicate group (~72/14/14)"
+    },
+    "splitCounts": {
+      "train": {
+        "alluvial": 36,
+        "black": 168,
+        "laterite": 148,
+        "red": 73
+      },
+      "val": {
+        "alluvial": 7,
+        "black": 31,
+        "laterite": 27,
+        "red": 18
+      },
+      "test": {
+        "alluvial": 5,
+        "black": 33,
+        "laterite": 31,
+        "red": 14
+      }
+    }
+  },
+  "evaluation": {
+    "file": "evaluation.json",
+    "testAccuracy": 0.8072,
+    "macroF1": 0.7253,
+    "testSamples": 83
+  },
+  "artifactChecks": {
+    "problems": [],
+    "tfjsParityMaxAbsDiff": 5.364418029785156e-07,
+    "minMacroF1Required": 0.7
+  },
+  "integrity": {
+    "group1-shard1of3.bin": "5e9b8e80d706eb0101c220410e5e70e7d7a21ef37af203e955f968ce5f1191e0",
+    "group1-shard2of3.bin": "a057cbca91b556cedf690fc77bd3937324c619c7b4af832e04d642ff5a9e0ade",
+    "group1-shard3of3.bin": "3ee920c2cef3203bd8b578d25492e1b8b45a3e6973e2d3fac72fb675a477d9cb"
+  },
+  "knownLimitations": [
+    "Trained on a few hundred photographs; the alluvial class has only ~50 originals, so its test metrics have wide uncertainty.",
+    "Photos in the dataset are mostly close-ups of dry soil in daylight; wet soil, shadows, crop residue or mixed soils are out of distribution.",
+    "Predicts visual soil category only. It does not measure pH, nutrients or texture; a soil test is still required.",
+    "Dataset licence is non-commercial (CC BY-NC-SA 4.0)."
+  ]
+}

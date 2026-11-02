@@ -7,15 +7,18 @@ validate (see `src/lib/inference/metadata.ts`):
 - `labels.json` (ordered class ids; must equal `metadata.labels`)
 - `model.json` + weight shards (TF.js layers-model)
 
-These files are produced by the Kaggle/Colab GPU notebooks in
-`packages/ml-models/`. Never train locally.
+These files are produced by the Kaggle GPU notebooks in
+`packages/ml-models/` (`npm run train:cloud -- soil`) and installed with
+`npm run model:import`, which re-checks sizes, sha256 and output width.
+Never train locally.
 
 ## Current contents
 
-The `model.json` and shards currently in this folder are **legacy
-artifacts of unknown provenance**: there is no record of the dataset,
-class order, preprocessing or test metrics used to make them, and the soil
-and disease exports share byte-identical backbone shards. They load in
-TF.js 4.22, but their outputs cannot be interpreted reliably, so
-no `metadata.json` is provided for them and the app shows
-**MODEL AWAITING CLOUD TRAINING**. They are excluded from the PWA precache.
+`soil-mnv2-20261102T062949Z`: MobileNetV2 transfer model trained on a Kaggle
+Tesla T4 on 2026-11-02 from `ai4a-lab/comprehensive-soil-classification-datasets`
+(CC BY-NC-SA 4.0). Held-out test accuracy 0.807, macro F1 0.725 (83 images).
+See `evaluation.json` and `docs/MODEL_EVALUATION_REPORT.md`.
+
+It predicts the **visual soil type only**
+(alluvial / வண்டல் மண், black / கருமண், laterite / லேட்டரைட் மண்,
+red / செம்மண்). It does not measure pH, nutrients or texture.

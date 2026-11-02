@@ -1,0 +1,470 @@
+{
+  "task": "disease",
+  "split": "test",
+  "testSamples": 1474,
+  "testAccuracy": 0.9274084124830394,
+  "macroF1": 0.9275605323953325,
+  "accuracy95CI": [
+    0.9145183175033921,
+    0.9409769335142469
+  ],
+  "macroF1_95CI": [
+    0.9146228545500439,
+    0.940803290458593
+  ],
+  "validationAccuracy": 0.9337883959044369,
+  "validationSamples": 1465,
+  "perClass": {
+    "tomato_bacterial_spot": {
+      "precision": 0.9444444444444444,
+      "recall": 0.9224806201550387,
+      "f1": 0.9333333333333333,
+      "support": 129
+    },
+    "tomato_early_blight": {
+      "precision": 0.9365079365079365,
+      "recall": 0.7919463087248322,
+      "f1": 0.8581818181818182,
+      "support": 149
+    },
+    "tomato_healthy": {
+      "precision": 0.9515151515151515,
+      "recall": 1.0,
+      "f1": 0.9751552795031055,
+      "support": 157
+    },
+    "tomato_late_blight": {
+      "precision": 0.9319727891156463,
+      "recall": 0.8726114649681529,
+      "f1": 0.9013157894736842,
+      "support": 157
+    },
+    "tomato_leaf_mold": {
+      "precision": 0.9225806451612903,
+      "recall": 0.9662162162162162,
+      "f1": 0.9438943894389439,
+      "support": 148
+    },
+    "tomato_septoria_leaf_spot": {
+      "precision": 0.8910256410256411,
+      "recall": 0.9144736842105263,
+      "f1": 0.9025974025974026,
+      "support": 152
+    },
+    "tomato_spider_mites": {
+      "precision": 0.9444444444444444,
+      "recall": 0.9379310344827586,
+      "f1": 0.9411764705882353,
+      "support": 145
+    },
+    "tomato_target_spot": {
+      "precision": 0.8203592814371258,
+      "recall": 0.9072847682119205,
+      "f1": 0.8616352201257862,
+      "support": 151
+    },
+    "tomato_mosaic_virus": {
+      "precision": 0.9787234042553191,
+      "recall": 0.9857142857142858,
+      "f1": 0.9822064056939501,
+      "support": 140
+    },
+    "tomato_yellow_leaf_curl_virus": {
+      "precision": 0.9727891156462585,
+      "recall": 0.9794520547945206,
+      "f1": 0.9761092150170648,
+      "support": 146
+    }
+  },
+  "confusionMatrix": {
+    "labels": [
+      "tomato_bacterial_spot",
+      "tomato_early_blight",
+      "tomato_healthy",
+      "tomato_late_blight",
+      "tomato_leaf_mold",
+      "tomato_septoria_leaf_spot",
+      "tomato_spider_mites",
+      "tomato_target_spot",
+      "tomato_mosaic_virus",
+      "tomato_yellow_leaf_curl_virus"
+    ],
+    "rows_true_cols_pred": [
+      [
+        119,
+        0,
+        0,
+        2,
+        0,
+        2,
+        0,
+        6,
+        0,
+        0
+      ],
+      [
+        4,
+        118,
+        0,
+        6,
+        2,
+        9,
+        0,
+        9,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        157,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        6,
+        1,
+        137,
+        7,
+        1,
+        0,
+        4,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        143,
+        0,
+        2,
+        1,
+        0,
+        1
+      ],
+      [
+        2,
+        2,
+        2,
+        0,
+        2,
+        139,
+        0,
+        5,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        136,
+        5,
+        1,
+        2
+      ],
+      [
+        0,
+        0,
+        4,
+        1,
+        0,
+        4,
+        4,
+        137,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        0,
+        138,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        143
+      ]
+    ]
+  },
+  "fractionBelowMinConfidence": 0.05223880597014925,
+  "minConfidence": 0.6,
+  "misclassifiedExamples": [
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/acbad9e6-d801-48d5-92ee-9fae23fcfb93___UF.GRC_BS_Lab Leaf 0250.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/b7db70a8-ca63-409e-9e60-47dce0ac5164___UF.GRC_BS_Lab Leaf 0646.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/bc87927b-7858-4d02-ada3-d8dc075bd82b___UF.GRC_BS_Lab Leaf 9048.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/bea776af-8c63-4376-a7f2-7cbd0e15e743___GCREC_Bact.Sp 3631.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/cfe7ebae-8e0f-4b12-8aae-d76fd249b2c4___GCREC_Bact.Sp 6342.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/d5b68019-d730-432d-80b5-dcd87b39742d___UF.GRC_BS_Lab Leaf 1200.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/d9461bb6-7502-4f29-80eb-e691b7f5619f___GCREC_Bact.Sp 6293.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/ddfa387b-e1ba-4033-aea8-e6644c19b0fa___GCREC_Bact.Sp 3563.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/f5d9fa8d-af44-4362-9134-190479bbe522___GCREC_Bact.Sp 3610.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Bacterial_spot/ffb47323-2c7d-48ea-9c39-25a97e37d548___GCREC_Bact.Sp 3614.JPG",
+      "label": "tomato_bacterial_spot",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/240300f1-a601-4363-84e8-670af8a124a1___RS_Erly.B 7762.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/366e550d-8604-44cd-b239-325d9e14a4f4___RS_Erly.B 6378.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_bacterial_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/4cbe4896-66b5-4834-8eb7-5baf49ed2f7d___RS_Erly.B 8354.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_leaf_mold"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/4eccde8f-4b47-4e5e-b0aa-9eaa67b20126___RS_Erly.B 8417.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/52082b15-4350-415a-be8c-bb0e0fc3ab88___RS_Erly.B 6332.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/5870b25f-914c-4dae-aaf5-88d48cb90803___RS_Erly.B 7774.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/5ac54e63-40a4-4651-a900-fd3ab4d32bae___RS_Erly.B 7727.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/5fc7639c-d04d-40bc-bbd3-68bf11183ed9___RS_Erly.B 7745.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/605e0af6-415f-4e25-8f0d-a8f36371732b___RS_Erly.B 7827.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/7984dac1-acc8-466a-bbee-7377ea702462___RS_Erly.B 8386.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/7bd63940-1890-4263-8c8c-e0c743bb51ce___RS_Erly.B 9487.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/7fe26a53-b4d8-4069-bb0a-1c6d19cbc4e1___RS_Erly.B 7810.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_mosaic_virus"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/8824899d-1dce-4729-860b-336d563bc268___RS_Erly.B 7837.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/9f98d981-b130-4238-aa34-21b0edfc1eaf___RS_Erly.B 7806.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/Tomato___Early_blight_original_dc4e5770-ed70-4ff3-b61d-a6296faae7e1___RS_Erly.B 7568.JPG_9e660403-3280-43ff-9fd8-5364916a5086.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_bacterial_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/Tomato___Early_blight_original_e3aef05b-9ed6-421c-a44d-82a996b3e3bb___RS_Erly.B 7803.JPG_69261b1b-caf5-4229-b603-8e3da4fcb62d.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/a138ec63-9d5e-4c6d-97d6-da0159c93c0a___RS_Erly.B 7744.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/b165d0d3-726d-4913-8b92-3f14e1b99410___RS_Erly.B 6377.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_bacterial_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/baea464c-e54b-4e22-8bbc-8047d19ed0cf___RS_Erly.B 8323.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/c66ca8bd-a004-4efb-a66c-3be5168aaaca___RS_Erly.B 7826.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/cdb26b0e-04b6-4ccf-855c-d85a106c1f95___RS_Erly.B 8387.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/d032b2d0-3c5b-4f1d-9532-4fd09cbd5482___RS_Erly.B 7689.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/d368153c-6779-4a7e-a82d-9ae10dd36bb2___RS_Erly.B 7678.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/e2ce6add-93e2-4c1f-9ee3-2354d1542e8b___RS_Erly.B 7698.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/e3aef05b-9ed6-421c-a44d-82a996b3e3bb___RS_Erly.B 7803.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/e592659e-566b-454b-95ba-851f3a53197c___RS_Erly.B 7843.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/e7d248e4-a5e5-431f-9061-6383c14d8526___RS_Erly.B 7426.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_leaf_mold"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/eb94014e-83b7-46a4-9b1a-7cae23876302___RS_Erly.B 7471.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Early_blight/efd88799-7fbc-4638-b66b-4e49c7bf7b9f___RS_Erly.B 9390.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_septoria_leaf_spot"
+    },
+    {
+      "rel": "tomato/val/Tomato___Early_blight/1ba9a636-a673-45bc-b515-4fe6848f271e___RS_Erly.B 9605.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_late_blight"
+    },
+    {
+      "rel": "tomato/val/Tomato___Early_blight/Tomato___Early_blight_original_0f1fb081-c715-414e-aa64-2c398ba6c320___RS_Erly.B 6382.JPG_d5096883-34a9-4aed-8790-eab356e28199.JPG",
+      "label": "tomato_early_blight",
+      "pred": "tomato_bacterial_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/1498c064-8f74-4706-bf27-4761c24b72bd___RS_Late.B 5120.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_early_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/2598e4ba-1e3c-43f7-bb7d-da6164209acf___RS_Late.B 4850.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_target_spot"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/4789c47e-2fcd-4dd5-8a57-818b745c123d___GHLB2 Leaf 8545.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_early_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/92286a65-7836-4a51-9e6a-ada347bd2cbf___RS_Late.B 5398.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_leaf_mold"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/9768e99b-26dd-4295-bac6-a374dc1360be___RS_Late.B 6569.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_early_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/aefc20fb-6226-4bb9-90e7-6619219ec15a___GHLB Leaf 23.2 Day 12.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_early_blight"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/afb65a40-7512-4d2c-884e-56e6c5010511___RS_Late.B 5380.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_leaf_mold"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/b687c1bd-478f-45ea-a69d-d66f980dea08___GHLB Leaf 7 Day 6.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_leaf_mold"
+    },
+    {
+      "rel": "tomato/train/Tomato___Late_blight/bb41f69c-b5b4-4acb-b965-950eac2b49c8___GHLB2 Leaf 130.JPG",
+      "label": "tomato_late_blight",
+      "pred": "tomato_yellow_leaf_curl_virus"
+    }
+  ],
+  "note": "Scores are uncalibrated softmax outputs. Metrics are on a held-out, group-disjoint test split of the same dataset; field performance on farmer photos has not been measured."
+}
