@@ -1,13 +1,14 @@
 # Testing report
 
-Run on 2026-11-01 on Windows 11 with Node v22.20.0, from the working tree that
+Run on 2026-11-02 on Windows 11 with Node v22.20.0, from the working tree that
 was committed with this report. All outputs below are copied from the actual
-runs.
+runs. API keys were read from the local `.env` by the proxies and were never
+printed.
 
 ## Type check
 
 ```
-$ npx tsc -b
+$ npm run typecheck        # tsc -b
 (no output, exit code 0)
 ```
 
@@ -15,98 +16,85 @@ $ npx tsc -b
 
 ```
 $ npx vitest run
- ✓ src/__tests__/router.test.ts  (3 tests)
- ✓ src/__tests__/i18n.test.ts  (4 tests)
- ✓ src/__tests__/weather.test.ts  (3 tests)
- ✓ src/__tests__/mandi.test.ts  (10 tests)
- ✓ src/__tests__/inference.test.ts  (9 tests)
- ✓ src/__tests__/fabrication.test.ts  (25 tests)
- ✓ src/__tests__/cropEngine.test.ts  (12 tests)
- ✓ src/__tests__/syncQueue.test.ts  (6 tests)
- ✓ src/__tests__/models.test.ts  (14 tests)
- ✓ src/__tests__/community.test.ts  (6 tests)
- ✓ src/__tests__/misc.test.ts  (7 tests)
- Test Files  11 passed (11)
-      Tests  99 passed (99)
+ ✓ src/__tests__/i18n.test.ts (4 tests)
+ ✓ src/__tests__/fabrication.test.ts (25 tests)
+ ✓ src/__tests__/weather.test.ts (3 tests)
+ ✓ src/__tests__/inference.test.ts (9 tests)
+ ✓ src/__tests__/cropEngine.test.ts (12 tests)
+ ✓ src/__tests__/mandi.test.ts (34 tests)
+ ✓ src/__tests__/newFeatures.test.ts (28 tests)
+ ✓ src/__tests__/syncQueue.test.ts (6 tests)
+ ✓ src/__tests__/worker.test.ts (3 tests)
+ ✓ src/__tests__/misc.test.ts (7 tests)
+ ✓ src/__tests__/community.test.ts (6 tests)
+ ✓ src/__tests__/router.test.ts (3 tests)
+ ✓ src/__tests__/models.test.ts (18 tests)
+ Test Files  13 passed (13)
+      Tests  158 passed (158)
 ```
 
 | File | What it covers |
 |---|---|
-| inference | Metadata schema; unverified, missing or inconsistent models are refused without loading TF.js; topK |
-| models | Taxonomy ↔ guidance ↔ class_map ↔ notebook consistency; the GPU refusal guard is present; checkArtifact (missing shard, size mismatch, sha256, output width, path traversal, unverified, graph-model); MobileNetV2 normalisation (0 → −1, 255 → 1); **a real TF.js forward pass** through `createClassifier` with an in-memory untrained fixture model (scores sum to 1); refusal on an output-width mismatch |
-| mandi | Real record parsing (dd/mm/yyyy, numeric prices); live/cached/unavailable labelling; no-key behaviour |
-| weather | Parsing; source and age; no mock data |
-| community | Tile aggregation; rating document id and shape (matching the rules); average ratings |
-| syncQueue | Idempotency keys, retries with backoff, dedupe |
-| fabrication | Shape parameter validation; bilingual intent extraction (including regression cases); SVG serialisation escapes markup |
-| cropEngine | Deterministic ranking, missing inputs, pH, rain risks, growth stages |
-| i18n | Tamil and English key parity; no empty strings |
-| router, misc | Hash route parsing and sanitisation; formatting helpers |
-
-The fixture model has random weights and exists only to exercise the
-pipeline. It was created in memory, and no training happened.
+| models | The **shipped** soil and disease artifacts: metadata status `validated`, label set matches the taxonomy, shard sizes and SHA-256, output width; a real TF.js forward pass; checkArtifact refusal cases |
+| newFeatures | Planner task generation, buckets and once-per-day reminders; finance validation, report totals, per-month/crop/category and CSV escaping; irrigation FAO-56 Ra/Hargreaves ET0, Kc, effective rain, drip vs surface; watchlist validation, observation dedupe, alert rules; error classification and recovery; AI proxy request validation (unknown fields such as `apiKey` rejected), key sent only in a header and never returned, no retry on 403, backoff and model fallback on 500/429, blocked/empty answers, rate limit |
+| worker | Production Worker: `POST /ai/generate` works for the app origin without leaking the key, foreign origins get 403, GET gets 405, CORS preflight only for allowed origins, unknown paths 404 |
+| mandi | Proxy validation, pinned resource, caching, pagination, explorer filtering/sorting, record parsing |
+| inference, cropEngine, weather, community, syncQueue, fabrication, i18n, router, misc | As before (see git history of this file) |
 
 ## Production build
 
 ```
 $ npm run build
-dist/assets/SoilMap-*.js     164.74 kB │ gzip:  48.92 kB   (lazy)
-dist/assets/index-*.js       243.57 kB │ gzip:  83.07 kB   (entry)
-dist/assets/firebase-*.js    437.96 kB │ gzip: 102.99 kB
-dist/assets/index-*.js     1,915.93 kB │ gzip: 305.92 kB   (TF.js, lazy)
-✓ built
-PWA v0.20.5  mode generateSW  precache 37 entries (2875.94 KiB)
+dist/assets/PlannerScreen-*.js       11.34 kB │ gzip:   4.21 kB   (lazy)
+dist/assets/FinanceScreen-*.js       11.57 kB │ gzip:   3.96 kB   (lazy)
+dist/assets/IrrigationScreen-*.js    10.39 kB │ gzip:   4.06 kB   (lazy)
+dist/assets/WatchlistScreen-*.js     10.46 kB │ gzip:   3.87 kB   (lazy)
+dist/assets/AssistantScreen-*.js      8.36 kB │ gzip:   3.45 kB   (lazy)
+dist/assets/index-*.js              280.17 kB │ gzip:  98.41 kB   (entry)
+dist/assets/firebase-*.js           437.96 kB │ gzip: 102.99 kB
+dist/assets/index-*.js            1,915.93 kB │ gzip: 305.92 kB   (TF.js, lazy)
+PWA v0.20.5  mode generateSW  precache 48 entries (3006.86 KiB)
 ```
 
-## Notebook static checks
+The build plugin `forbidSecretsInBundle` scans every emitted file for the
+data.gov.in and Gemini key values and fails the build if either appears. It
+passed.
 
-```
-$ node scripts/build-notebooks.mjs
-wrote packages/ml-models/soil_classifier/train_colab.ipynb (18 cells)
-wrote packages/ml-models/disease_classifier/train_colab.ipynb (18 cells)
-$ python -I nbcheck.py <both notebooks>     # ast.parse of every code cell
-ok packages/ml-models/soil_classifier/train_colab.ipynb
-ok packages/ml-models/disease_classifier/train_colab.ipynb
-```
+## Cloud training (Kaggle T4 GPU)
 
-The notebooks have **not** been executed. Execution needs a Kaggle or Colab GPU.
+Both notebooks ran on Kaggle; only the small TF.js output was downloaded and
+imported. Details and metrics are in `MODEL_EVALUATION_REPORT.md`.
 
-## Firestore rules
+## Live service checks (2026-11-02, ~17:00 IST)
 
-```
-$ firebase deploy --only firestore:rules --dry-run
-+  cloud.firestore: rules file firestore.rules compiled successfully
-+  Dry run complete!
-```
-
-No emulator-based rule tests exist yet (see `KNOWN_LIMITATIONS.md`).
+| Check | Result |
+|---|---|
+| Gemini through `handleAiProxy`, task `assistant`, Tamil | 200, model `gemini-3.5-flash`, Tamil answer with a "பரிந்துரை:" section; key absent from response |
+| Gemini, task `assistant`, English | 200 |
+| Gemini, task `disease_explain`, English | 200 |
+| Mandi through `handleMandiProxy`: Tamil Nadu → Villupuram → Tomato | 1 record, Villupuram (Uzhavar Sandhai), Deshi/Local, min/max/modal ₹3500/quintal, arrival 02/11/2026; key absent from response |
+| Mandi: Tamil Nadu → Tomato (all districts) | 67 records |
 
 ## Browser smoke test (production build)
 
-`vite preview` was served on port 4173, and each route was rendered with
-headless Chrome (`--dump-dom`, 8 s virtual time):
+`vite preview` on port 4173; each route rendered with headless Chrome
+(`--dump-dom`, 390×844, 8 s virtual time). No route hit the error boundary.
 
 | Route | Result |
 |---|---|
-| `#/` | Renders the location setup card in Tamil |
-| `#/soil` | "மாடல் கிளவுட் பயிற்சிக்காக காத்திருக்கிறது" (model awaiting cloud training) plus manual soil picker |
-| `#/disease` | Tomato-only notice, awaiting-training notice, condition browser |
-| `#/guidance/tomato_late_blight` | Safety warning, urgency banner, symptoms |
-| `#/crops` | Crop form; notes that no rain forecast is available |
-| `#/farm` | "No crop selected" empty state |
-| `#/market` | Crop and district selectors |
-| `#/maker` | Fabrication form with example and part types |
-| `#/settings` | Language and location settings |
-| `#/map` | Map and filters render, then an error: **"Missing or insufficient permissions"** because production Firestore still had the baseline rules. Fixed by deploying `firestore.rules` (see the final report). |
-
-Also checked over HTTP: `/sw.js` 200, `/manifest.webmanifest` 200, and
-`/models/soil_model/metadata.json` returns the SPA HTML fallback. The
-classifier treats that as "no metadata" and shows the awaiting-training
-state.
+| `#/` | Dashboard renders |
+| `#/soil` | "Model ready", version `soil-mnv2-20261102T062949Z` |
+| `#/disease` | "Model ready", version `disease-mnv2-20261102T073346Z`, tomato-only notice |
+| `#/planner`, `#/finance`, `#/watchlist` | Empty states with "add" actions |
+| `#/irrigation` | Form plus the "FAO-56 estimate, not a sensor reading" disclaimer |
+| `#/assistant` | "AI not configured" (expected: this build had no `VITE_MANDI_PROXY_URL`/`VITE_AI_PROXY_URL`) |
+| `#/market`, `#/crops`, `#/maker`, `#/settings` | Render normally |
+| `#/map` | 53 community scans in 4 areas |
 
 ## Not tested
 
-- Real camera capture on a device, and voice input and output (both need a device or microphone)
+- Real camera capture on a device, and voice input and output (need a device and microphone)
 - Firestore rules against the emulator
 - Automated accessibility audit
-- Execution of the cloud training notebooks
+- The production Cloudflare Worker itself (not deployed from this machine; its routing is covered by `worker.test.ts`)
+- Field accuracy of the models on real farm photos

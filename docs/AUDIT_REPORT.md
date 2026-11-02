@@ -19,7 +19,7 @@ code or a live service, and the evidence is listed with it.
 
 | # | Area | Finding | Resolution |
 |---|---|---|---|
-| H1 | Secrets | A Gemini API key was intended to ship in the browser bundle (`VITE_GEMINI_API_KEY`). | The LLM path was removed. Intent extraction is rule-based and deterministic, with tests. `.env.example` documents that `VITE_*` values are public. |
+| H1 | Secrets | A Gemini API key was intended to ship in the browser bundle (`VITE_GEMINI_API_KEY`). | The browser-side LLM path was removed; fabrication intent extraction stays rule-based and tested. Gemini is now called only through a server-side proxy (`src/server/aiProxy.ts`, Worker route `/ai/generate`) holding `GEMINI_API_KEY`; the build fails if the key value is in `dist/`. |
 | H2 | Offline sync | The IndexedDB queue had no idempotency, so a retry after a timeout could create duplicates. | Each item is keyed by an idempotency key used as the Firestore doc id. Rules allow only identical retries. Backoff applies. |
 | H3 | CI/CD | Deploy workflows ran no tests and failed when the service-account secret was missing. | Added a `ci.yml` (test and build). Deploy runs only when the secret exists, and otherwise prints a warning. |
 | H4 | Intent extraction | Variable shadowing and rule ordering assigned quantities to the wrong dimension. Phrase boundaries were ignored. | Fixed, with regression tests (`fabrication.test.ts`). |
@@ -30,9 +30,18 @@ code or a live service, and the evidence is listed with it.
 - i18n: hard-coded English strings and missing Tamil keys. Every key now exists in both files (enforced by `i18n.test.ts`).
 - Crop recommendation was presented as "AI". It is a deterministic rule engine and is labelled that way, with per-check results.
 - Accessibility: icon-only tiles had no labels. Components now use semantic buttons, labels, focus rings and `aria-live` toasts.
-- Data.gov.in CORS was untested. It was verified on 2026-11-01 that `Access-Control-Allow-Origin: *` is returned, so the production build calls the API directly.
+- Data.gov.in key was in the bundle. Mandi calls now go through the server-side proxy (`src/server/mandiProxy.ts`).
 
 ## Not changed (out of scope or blocked)
 
 - Cloud Functions (true server-side aggregation and moderation) need the Blaze plan. Read-side aggregation plus strict rules is used instead.
-- Model training is blocked until a Kaggle API token is provided. See `MODEL_EVALUATION_REPORT.md`.
+- Model training: completed on Kaggle GPU on 2026-11-02. See `MODEL_EVALUATION_REPORT.md`.
+
+## Second audit pass (2026-11-02)
+
+| Finding | Fix |
+|---|---|
+| `tsc -b` failed (TS6307): `src/server/aiProxy.ts` was imported by `vite.config.ts` but missing from `tsconfig.node.json`. | Added to the node project's `include`. |
+| A model test assumed labels are alphabetical; the disease model's output order is not. Inference already indexes by `metadata.labels`. | The test now compares the label set. |
+| With `VITE_AI_PROXY_URL` set, the client called `<url>/generate`, but the Worker serves only `/ai/generate`, so AI would 404 in production. | Client appends `/ai/generate` to either base URL; `worker.test.ts` covers the Worker routes. |
+| The five new modules had no unit tests. | `newFeatures.test.ts` (28 tests). |
