@@ -9,16 +9,43 @@ interface NavItem {
   route: Route;
   match: RouteName[];
   icon: string;
-  labelKey: "nav.home" | "nav.scan" | "nav.market" | "nav.map" | "nav.maker" | "nav.crops" | "nav.settings";
+  labelKey:
+    | "nav.home"
+    | "nav.scan"
+    | "nav.market"
+    | "nav.map"
+    | "nav.maker"
+    | "nav.crops"
+    | "nav.settings"
+    | "nav.planner"
+    | "nav.finance"
+    | "nav.water"
+    | "nav.assistant"
+    | "nav.watchlist";
 }
 
+// Full list for the sidebar (md and up).
 const NAV: NavItem[] = [
   { route: { name: "home" }, match: ["home", "settings"], icon: "🏠", labelKey: "nav.home" },
   { route: { name: "soil" }, match: ["soil", "disease", "guidance"], icon: "📷", labelKey: "nav.scan" },
+  { route: { name: "planner" }, match: ["planner"], icon: "🗓️", labelKey: "nav.planner" },
   { route: { name: "crops", soil: null }, match: ["crops", "farm"], icon: "🌾", labelKey: "nav.crops" },
+  { route: { name: "irrigation" }, match: ["irrigation"], icon: "💧", labelKey: "nav.water" },
   { route: { name: "market" }, match: ["market"], icon: "₹", labelKey: "nav.market" },
+  { route: { name: "watchlist" }, match: ["watchlist"], icon: "🔔", labelKey: "nav.watchlist" },
+  { route: { name: "finance" }, match: ["finance"], icon: "📒", labelKey: "nav.finance" },
+  { route: { name: "assistant" }, match: ["assistant"], icon: "💬", labelKey: "nav.assistant" },
   { route: { name: "map" }, match: ["map"], icon: "🗺️", labelKey: "nav.map" },
   { route: { name: "maker" }, match: ["maker"], icon: "🔧", labelKey: "nav.maker" },
+];
+
+// Five most-used destinations for the mobile bottom bar; the rest are on the home dashboard and sidebar.
+const MOBILE_NAV: NavItem[] = [
+  NAV[0],
+  { ...NAV[1] },
+  NAV[2],
+  { ...NAV[5], match: ["market", "watchlist"] },
+  NAV[8],
 ];
 
 function SyncIndicator() {
@@ -85,7 +112,7 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
           <p className="font-display font-extrabold text-xl text-leaf-800">{t("appName")}</p>
           <p className="text-xs text-soil-500 mt-0.5">{t("tagline")}</p>
         </div>
-        <ul className="flex flex-col gap-1 px-3">
+        <ul className="flex flex-col gap-0.5 px-3 overflow-y-auto pb-4">
           {[...NAV, { route: { name: "settings" } as Route, match: ["settings"] as RouteName[], icon: "⚙️", labelKey: "nav.settings" as const }].map((item) => {
             const active = item.match.includes(route.name) && !(item.labelKey === "nav.home" && route.name === "settings");
             return (
@@ -94,7 +121,7 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
                   type="button"
                   onClick={() => navigate(item.route)}
                   aria-current={active ? "page" : undefined}
-                  className={`w-full flex items-center gap-3 min-h-[48px] px-3 rounded-tile text-left font-semibold ${
+                  className={`w-full flex items-center gap-3 min-h-[44px] px-3 rounded-tile text-left font-semibold ${
                     active ? "bg-leaf-50 text-leaf-800" : "text-soil-700 hover:bg-soil-50"
                   }`}
                 >
@@ -162,8 +189,8 @@ export function AppShell({ route, children }: { route: Route; children: React.Re
 
       {/* Bottom navigation (mobile) */}
       <nav aria-label={t("nav.label")} className="no-print md:hidden fixed bottom-0 inset-x-0 z-[600] bg-white border-t border-soil-100 pb-[env(safe-area-inset-bottom)]">
-        <ul className="grid grid-cols-6">
-          {NAV.map((item) => {
+        <ul className="grid grid-cols-5">
+          {MOBILE_NAV.map((item) => {
             const active = item.match.includes(route.name) && !(item.labelKey === "nav.home" && route.name === "settings");
             return (
               <li key={item.labelKey}>

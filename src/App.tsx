@@ -16,6 +16,13 @@ const MyCrop = lazy(() => import("./modules/farm/my-crop/MyCrop").then((m) => ({
 const MandiPrices = lazy(() => import("./modules/farm/mandi-prices/MandiPrices").then((m) => ({ default: m.MandiPrices })));
 const SoilMap = lazy(() => import("./modules/farm/soil-map/SoilMap").then((m) => ({ default: m.SoilMap })));
 const FabricationHome = lazy(() => import("./modules/fabrication/FabricationHome").then((m) => ({ default: m.FabricationHome })));
+const PlannerScreen = lazy(() => import("./modules/planner/PlannerScreen").then((m) => ({ default: m.PlannerScreen })));
+const FinanceScreen = lazy(() => import("./modules/finance/FinanceScreen").then((m) => ({ default: m.FinanceScreen })));
+const IrrigationScreen = lazy(() => import("./modules/irrigation/IrrigationScreen").then((m) => ({ default: m.IrrigationScreen })));
+const AssistantScreen = lazy(() => import("./modules/assistant/AssistantScreen").then((m) => ({ default: m.AssistantScreen })));
+const WatchlistScreen = lazy(() => import("./modules/watchlist/WatchlistScreen").then((m) => ({ default: m.WatchlistScreen })));
+import { installGlobalErrorHandlers } from "./lib/errors";
+import { useTaskReminders } from "./modules/planner/useTaskReminders";
 import { ensureAnonymousAuth, isFirebaseConfigured, writeQueuedItem } from "./lib/firebase";
 import { registerAutoFlush } from "./shared/offline-sync/SyncQueue";
 import { ErrorBoundary } from "./shared/ui/ErrorBoundary";
@@ -43,6 +50,16 @@ function RouteView({ route }: { route: Route }) {
       return <FabricationHome />;
     case "settings":
       return <SettingsScreen />;
+    case "planner":
+      return <PlannerScreen />;
+    case "finance":
+      return <FinanceScreen />;
+    case "irrigation":
+      return <IrrigationScreen />;
+    case "assistant":
+      return <AssistantScreen />;
+    case "watchlist":
+      return <WatchlistScreen />;
   }
 }
 
@@ -54,6 +71,11 @@ export default function App() {
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  // Unhandled promise rejections are logged (redacted) instead of vanishing.
+  useEffect(() => installGlobalErrorHandlers(), []);
+  // In-app task reminders while the app is open (no background push).
+  useTaskReminders();
 
   // Firebase is optional: without config the app works fully offline and
   // nothing is queued for upload.

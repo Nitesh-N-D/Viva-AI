@@ -188,3 +188,70 @@ describe("TF.js preprocessing and inference pipeline", () => {
     expect(await c.status("soil")).toMatchObject({ state: "error" });
   });
 });
+
+// ---- the artifacts actually published in public/models ----------------------
+// These run only for a task whose folder holds a cloud-trained metadata.json.
+// They load the real weights and run inference (no training): the folder must
+// pass the importer's integrity check, and the app's classifier must accept it.
+
+import { createHash } from "node:crypto";
+import { existsSync, readdirSync, statSync } from "node:fs";
+
+for (const task of ["soil", "disease"] as const) {
+  const dir = resolve(`public/models/${task}_model`);
+  const shipped = existsSync(`${dir}/metadata.json`);
+  describe.runIf(shipped)(`published ${task} model`, () => {
+    const read = (f: string) => JSON.parse(readFileSync(`${dir}/${f}`, "utf8"));
+    const bins = shipped ? readdirSync(dir).filter((f) => f.endsWith(".bin")) : [];
+
+    it("passes the importer's integrity check and has real metrics", () => {
+      const metadata = read("metadata.json");
+      const problems = checkArtifact(task, {
+        modelJson: read("model.json"),
+        labels: read("labels.json"),
+        metadata,
+        sizes: Object.fromEntries(bins.map((f) => [f, statSync(`${dir}/${f}`).size])),
+        sha256: Object.fromEntries(bins.map((f) => [f, createHash("sha256").update(readFileSync(`${dir}/${f}`)).digest("hex")])),
+      });
+      expect(problems).toEqual([]);
+      expect(metadata.training.platform).toBe("kaggle");
+      // Output index order is whatever training used (metadata.labels is the
+      // source of truth for inference); only the label *set* must match the taxonomy.
+      expect([...metadata.labels].sort()).toEqual(TAXONOMY[task].map((t) => t.id).sort());
+      const evaluation = read("evaluation.json");
+      expect(evaluation.macroF1).toBeCloseTo(metadata.evaluation.macroF1, 3);
+      expect(metadata.artifactChecks.tfjsParityMaxAbsDiff).toBeLessThan(1e-3);
+    });
+
+    it("loads through the app classifier and returns a distribution over its labels", async () => {
+      await tf.setBackend("cpu");
+      const metadata = read("metadata.json");
+      const c = createClassifier({
+        loadTf: async () => tf,
+        fetchJson: async (url) => read(url.split("/").pop()!),
+        loadModel: async () =>
+          tf.loadLayersModel({
+            load: async () => {
+              const mj = read("model.json");
+              const specs = mj.weightsManifest.flatMap((g: { weights: unknown[] }) => g.weights);
+              const paths: string[] = mj.weightsManifest.flatMap((g: { paths: string[] }) => g.paths);
+              const buf = Buffer.concat(paths.map((p) => readFileSync(`${dir}/${p}`)));
+              return {
+                modelTopology: mj.modelTopology,
+                weightSpecs: specs,
+                weightData: buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+              };
+            },
+          }),
+      });
+      expect((await c.status(task)).state).toBe("ready");
+      const w = 64;
+      const pixels = { width: w, height: w, data: new Uint8Array(w * w * 4).fill(140) };
+      const out = await c.classify(task, pixels as unknown as ImageData, metadata.labels.length);
+      expect(out.status).toBe("ok");
+      if (out.status !== "ok") return;
+      expect(out.top.reduce((s, p) => s + p.score, 0)).toBeCloseTo(1, 3);
+      expect(new Set(out.top.map((p) => p.labelId))).toEqual(new Set(metadata.labels));
+    }, 60_000);
+  });
+}

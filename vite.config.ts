@@ -4,6 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import pkg from "./package.json";
 import { CACHE_TTL_MS, RateLimiter, TtlCache, handleMandiProxy } from "./src/server/mandiProxy";
 import type { MandiProxyBody } from "./src/lib/mandiQuery";
+import { AI_LIMITS, AI_RATE_PER_MINUTE, geminiKey, geminiModels, handleAiProxy } from "./src/server/aiProxy";
 
 /**
  * Server-side mandi key. AGMARKNET_API_KEY has no VITE_ prefix, so Vite never
@@ -44,6 +45,46 @@ function mandiDevProxy(apiKey: string | undefined): Plugin {
   };
 }
 
+/**
+ * Serves POST /api-ai/generate from the shared Gemini proxy handler in `vite`
+ * and `vite preview`. The key is read here, server-side, and never exposed to
+ * client code (client code has no import.meta.env reference to it).
+ */
+function aiDevProxy(apiKey: string | undefined, models: string[]): Plugin {
+  const limiter = new RateLimiter(AI_RATE_PER_MINUTE);
+  const middleware = (req: import("http").IncomingMessage, res: import("http").ServerResponse, next: () => void) => {
+    const url = new URL(req.url ?? "/", "http://localhost");
+    if (url.pathname !== "/api-ai/generate") return next();
+    const send = (status: number, body: unknown, headers: Record<string, string> = { "content-type": "application/json" }) => {
+      res.writeHead(status, headers);
+      res.end(JSON.stringify(body));
+    };
+    if (req.method !== "POST") return send(405, { error: "bad_request", detail: "POST only" });
+    let raw = "";
+    let tooBig = false;
+    req.setEncoding("utf8");
+    req.on("data", (chunk: string) => {
+      raw += chunk;
+      if (raw.length > AI_LIMITS.bodyBytes) {
+        tooBig = true;
+        req.destroy();
+      }
+    });
+    req.on("end", () => {
+      if (tooBig) return send(413, { error: "bad_request", detail: "request too large" });
+      handleAiProxy(raw, req.socket.remoteAddress ?? "local", { apiKey, models, fetch: (u, init) => fetch(u, init), limiter }).then(
+        (r) => send(r.status, r.body, r.headers),
+        () => send(500, { error: "upstream_unavailable" })
+      );
+    });
+  };
+  return {
+    name: "viva-ai-proxy",
+    configureServer: (server) => void server.middlewares.use(middleware),
+    configurePreviewServer: (server) => void server.middlewares.use(middleware),
+  };
+}
+
 /** Fails the build if a server-only secret value ends up in any emitted file. */
 function forbidSecretsInBundle(secrets: (string | undefined)[]): Plugin {
   const values = secrets.filter((s): s is string => !!s && s.length >= 8);
@@ -65,6 +106,7 @@ function forbidSecretsInBundle(secrets: (string | undefined)[]): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const apiKey = mandiKey(env);
+  const aiKey = geminiKey(env);
   return {
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
@@ -72,7 +114,8 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     mandiDevProxy(apiKey),
-    forbidSecretsInBundle([apiKey]),
+    aiDevProxy(aiKey, geminiModels(env)),
+    forbidSecretsInBundle([apiKey, aiKey]),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [

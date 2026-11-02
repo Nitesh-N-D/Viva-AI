@@ -15,11 +15,30 @@ export type Route =
   | { name: "market" }
   | { name: "map" }
   | { name: "maker" }
-  | { name: "settings" };
+  | { name: "settings" }
+  | { name: "planner" }
+  | { name: "finance" }
+  | { name: "irrigation" }
+  | { name: "assistant" }
+  | { name: "watchlist" };
 
 export type RouteName = Route["name"];
 
-const SIMPLE: readonly RouteName[] = ["home", "soil", "disease", "farm", "market", "map", "maker", "settings"];
+const SIMPLE: readonly RouteName[] = [
+  "home",
+  "soil",
+  "disease",
+  "farm",
+  "market",
+  "map",
+  "maker",
+  "settings",
+  "planner",
+  "finance",
+  "irrigation",
+  "assistant",
+  "watchlist",
+];
 const ID_RE = /^[a-z0-9_]{1,64}$/;
 
 /** Parses "#/crops?soil=red" style hashes. Unknown hashes fall back to home. */
