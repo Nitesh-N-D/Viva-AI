@@ -47,6 +47,7 @@ describe("taxonomy, guidance and notebooks agree", () => {
 
       const kernel = readJson(`packages/ml-models/${dir}/kernel-metadata.template.json`);
       expect(kernel.enable_gpu).toBe(true);
+      expect(kernel.machine_shape).toBe("NvidiaTeslaT4");
       expect(kernel.is_private).toBe(true);
     });
   }

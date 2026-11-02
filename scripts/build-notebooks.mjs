@@ -509,22 +509,44 @@ plt.tight_layout(); plt.savefig(os.path.join(MODEL_DIR, "confusion_matrix.png"),
 H5 = os.path.join(CKPT_DIR, "final.h5")
 model.save(H5, include_optimizer=False)
 VENV = "/tmp/tfjs-venv"
-def sh(cmd, check=True):
-    print("$", " ".join(cmd)); r = subprocess.run(cmd, capture_output=True, text=True)
+# The platform image's PYTHONPATH/sitecustomize must not leak into the converter venv.
+CLEAN_ENV = {k: v for k, v in os.environ.items() if k not in ("PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "VIRTUAL_ENV")}
+CLEAN_ENV["PYTHONNOUSERSITE"] = "1"
+def sh(cmd, check=True, env=None):
+    print("$", " ".join(cmd)); r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     print(r.stdout[-3000:], r.stderr[-3000:]);
     if check and r.returncode != 0: raise RuntimeError(f"command failed: {cmd[0]}")
     return r
+# tensorflowjs 4.22 needs TensorFlow <= 2.18, which has no wheels for the image's Python 3.13,
+# so the converter runs on a uv-managed CPython 3.11 (downloaded into /tmp, cloud only).
+sh([sys.executable, "-m", "pip", "install", "-q", "uv"])
+UV = [sys.executable, "-m", "uv"]
 if not os.path.exists(f"{VENV}/bin/python"):
-    if sh([sys.executable, "-m", "venv", VENV], check=False).returncode != 0:
-        sh([sys.executable, "-m", "pip", "install", "-q", "virtualenv"]); sh([sys.executable, "-m", "virtualenv", VENV])
-if sh([f"{VENV}/bin/pip", "install", "-q", "tensorflowjs==4.22.0"], check=False).returncode != 0:
+    sh(UV + ["venv", "--python", "3.11", VENV], env=CLEAN_ENV)
+PIP = UV + ["pip", "install", "--python", f"{VENV}/bin/python", "-q"]
+# Pin the whole TF 2.18 family: an unpinned tensorflow-decision-forests resolves to a release built
+# for a newer TF/protobuf and breaks the converter import (protobuf gencode/runtime VersionError).
+TF_FAMILY = ["tensorflow==2.18.0", "tf_keras==2.18.0", "tensorflow-decision-forests==1.11.0", "setuptools<70"]  # tensorflow_hub imports pkg_resources
+if sh(PIP + ["tensorflowjs==4.22.0"] + TF_FAMILY, check=False, env=CLEAN_ENV).returncode != 0:
     # Fallback: skip optional heavy deps (jax/flax/TF-DF) that are not needed for keras -> layers-model.
-    sh([f"{VENV}/bin/pip", "install", "-q", "--no-deps", "tensorflowjs==4.22.0"])
-    sh([f"{VENV}/bin/pip", "install", "-q", "tensorflow-cpu>=2.13,<2.19", "tf_keras", "tensorflow_hub", "h5py", "packaging", "six", "importlib_resources"])
+    sh(PIP + ["--no-deps", "tensorflowjs==4.22.0"], env=CLEAN_ENV)
+    sh(PIP + ["tensorflow==2.18.0", "tf_keras==2.18.0", "tensorflow_hub", "h5py", "packaging", "six", "importlib_resources", "setuptools<70"], env=CLEAN_ENV)
+def converter_ok():
+    return sh([f"{VENV}/bin/python", "-c", "import tensorflowjs.converters.converter"], check=False, env=CLEAN_ENV).returncode == 0
+if not converter_ok():
+    # TF-DF/YDF only matter for decision-forest models; tensorflowjs treats them as optional imports.
+    # tensorflowjs imports tensorflow_decision_forests unconditionally, but only uses it for TF-DF
+    # SavedModels; the keras -> layers-model path never touches it. ydf wheels built against
+    # protobuf 6 cannot load beside TF 2.18's protobuf 5, so replace the package with an empty stub.
+    sh(UV + ["pip", "uninstall", "--python", f"{VENV}/bin/python", "tensorflow-decision-forests", "ydf"], check=False, env=CLEAN_ENV)
+    site = sh([f"{VENV}/bin/python", "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"], env=CLEAN_ENV).stdout.strip()
+    os.makedirs(os.path.join(site, "tensorflow_decision_forests"), exist_ok=True)
+    open(os.path.join(site, "tensorflow_decision_forests", "__init__.py"), "w").write("# stub: TF-DF unused for keras -> tfjs_layers_model\\n")
+    if not converter_ok(): raise RuntimeError("tensorflowjs converter cannot be imported in the isolated venv")
 for f in os.listdir(MODEL_DIR):
     if f.endswith(".bin") or f == "model.json": os.remove(os.path.join(MODEL_DIR, f))
 sh([f"{VENV}/bin/tensorflowjs_converter", "--input_format=keras", "--output_format=tfjs_layers_model",
-    "--weight_shard_size_bytes=4194304", H5, MODEL_DIR])
+    "--weight_shard_size_bytes=4194304", H5, MODEL_DIR], env=CLEAN_ENV)
 print(sorted(os.listdir(MODEL_DIR)))
 `),
     code(`
@@ -694,6 +716,7 @@ for (const [task, t] of Object.entries(TASKS)) {
         is_private: true,
         enable_gpu: true,
         enable_tpu: false,
+        machine_shape: "NvidiaTeslaT4",
         enable_internet: true,
         dataset_sources: [t.datasetSlug],
         competition_sources: [],

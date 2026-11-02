@@ -48,8 +48,47 @@ function kaggleUser() {
   return username;
 }
 
+// pip --user puts kaggle.exe in a Scripts folder that is often not on PATH on Windows.
+function kaggleEnv() {
+  const env = { ...process.env };
+  if (process.platform === "win32" && env.APPDATA) {
+    const extra = readdirSafe(join(env.APPDATA, "Python")).map((d) => join(env.APPDATA, "Python", d, "Scripts"));
+    const key = Object.keys(env).find((k) => k.toUpperCase() === "PATH") ?? "PATH"; // Windows uses "Path"
+    env[key] = [...extra, env[key] ?? ""].join(";");
+  }
+  return env;
+}
+function readdirSafe(dir) {
+  try {
+    return readdirSync(dir);
+  } catch {
+    return [];
+  }
+}
+const KAGGLE_ENV = kaggleEnv();
+
+// Resolve kaggle(.exe) on PATH ourselves so it runs WITHOUT a shell: cmd.exe would otherwise
+// eat regex metacharacters such as ^ and | in --file-pattern.
+function resolveKaggle() {
+  const exts = process.platform === "win32" ? [".exe", ".cmd", ".bat", ""] : [""];
+  const sep = process.platform === "win32" ? ";" : ":";
+  for (const dir of (Object.entries(KAGGLE_ENV).find(([k]) => k.toUpperCase() === "PATH")?.[1] ?? "").split(sep)) {
+    for (const ext of exts) {
+      const p = join(dir, `kaggle${ext}`);
+      if (dir && existsSync(p)) return p;
+    }
+  }
+  return "kaggle";
+}
+const KAGGLE_BIN = resolveKaggle();
+
 function kaggle(args, { capture = false } = {}) {
-  const r = spawnSync("kaggle", args, { encoding: "utf8", stdio: capture ? "pipe" : "inherit", shell: process.platform === "win32" });
+  const r = spawnSync(KAGGLE_BIN, args, {
+    encoding: "utf8",
+    stdio: capture ? "pipe" : "inherit",
+    shell: process.platform === "win32" && /\.(cmd|bat)$/i.test(KAGGLE_BIN),
+    env: KAGGLE_ENV,
+  });
   if (r.error) die(`could not run the kaggle CLI (${r.error.message}). Install it with: pip install kaggle`);
   return r;
 }
@@ -64,9 +103,14 @@ if (!noPush) {
   cpSync(join(nbDir, "train_colab.ipynb"), join(stage, "train_colab.ipynb"));
   writeFileSync(join(stage, "kernel-metadata.json"), JSON.stringify({ ...template, id: kernelId }, null, 2));
   console.log(`→ pushing ${kernelId} (Kaggle GPU, private)`);
-  const push = kaggle(["kernels", "push", "-p", stage]);
+  const push = kaggle(["kernels", "push", "-p", stage], { capture: true });
   rmSync(stage, { recursive: true, force: true });
-  if (push.status !== 0) die("kaggle kernels push failed (see output above)");
+  const pushText = `${push.stdout ?? ""}${push.stderr ?? ""}`.trim();
+  console.log(pushText);
+  // The CLI exits 0 even when the push is refused (e.g. "Maximum batch GPU session count of 2
+  // reached"), and polling would then follow the PREVIOUS run, so check the text as well.
+  if (push.status !== 0 || /error/i.test(pushText) || !/successfully pushed/i.test(pushText))
+    die("kaggle kernels push failed (see output above); not polling a stale run");
 }
 
 const deadline = Date.now() + MAX_HOURS * 3600_000;
@@ -82,7 +126,11 @@ while (Date.now() < deadline) {
 
 const outDir = resolve("downloads", task, new Date().toISOString().replace(/[:.]/g, "-"));
 console.log(`→ downloading kernel output to ${outDir}`);
-if (kaggle(["kernels", "output", kernelId, "-p", outDir]).status !== 0) die("kaggle kernels output failed");
+// Only the model folder, run report, zip and logs come down. Checkpoints stay in the cloud
+// (kept as the Kaggle kernel version's output), so no large files land on this machine.
+const OUTPUT_PATTERN = String.raw`^(?!.*\.(h5|keras|ckpt)$).*`;
+if (kaggle(["kernels", "output", kernelId, "-p", outDir, "--file-pattern", OUTPUT_PATTERN]).status !== 0)
+  die("kaggle kernels output failed");
 if (!/complete/.test(status)) die(`kernel finished with status "${status}". Logs are in ${outDir}; nothing was imported.`);
 
 function findModelDir(dir) {
