@@ -327,7 +327,7 @@ describe("getMandiPrices", () => {
 
   it("serves a fresh cache labelled cached, and refetches after FRESH_MS", async () => {
     vi.useFakeTimers({ now: new Date("2026-11-01T10:00:00Z") });
-    const fetcher = vi.fn<Parameters<Fetcher>, ReturnType<Fetcher>>(async () => proxyPage([raw()]));
+    const fetcher = vi.fn<Fetcher>(async () => proxyPage([raw()]));
     await getMandiPrices(VILLUPURAM_TOMATO, { fetcher, base: "/p" });
     const again = await getMandiPrices(VILLUPURAM_TOMATO, { fetcher, base: "/p" });
     expect(again.status).toBe("cached");
@@ -339,7 +339,7 @@ describe("getMandiPrices", () => {
   });
 
   it("shares one request between identical concurrent queries", async () => {
-    const fetcher = vi.fn<Parameters<Fetcher>, ReturnType<Fetcher>>(async () => proxyPage([raw()]));
+    const fetcher = vi.fn<Fetcher>(async () => proxyPage([raw()]));
     const [a, b] = await Promise.all([
       getMandiPrices(VILLUPURAM_TOMATO, { fetcher, base: "/p" }),
       getMandiPrices(VILLUPURAM_TOMATO, { fetcher, base: "/p" }),
@@ -350,13 +350,13 @@ describe("getMandiPrices", () => {
 
   it("retries a page once after a transient upstream timeout, but not after an auth failure", async () => {
     let calls = 0;
-    const flaky = vi.fn<Parameters<Fetcher>, ReturnType<Fetcher>>(async () =>
+    const flaky = vi.fn<Fetcher>(async () =>
       ++calls === 1 ? new Response(JSON.stringify({ error: "upstream_timeout" }), { status: 504 }) : proxyPage([raw()])
     );
     const r = await getMandiPrices({ state: "Tamil Nadu", commodity: "RetryTomato" }, { fetcher: flaky, base: "/p" });
     expect(r.status).toBe("live");
     expect(flaky).toHaveBeenCalledTimes(2);
-    const auth = vi.fn<Parameters<Fetcher>, ReturnType<Fetcher>>(async () => new Response(JSON.stringify({ error: "upstream_auth" }), { status: 502 }));
+    const auth = vi.fn<Fetcher>(async () => new Response(JSON.stringify({ error: "upstream_auth" }), { status: 502 }));
     expect((await getMandiPrices({ state: "Tamil Nadu", commodity: "AuthTomato" }, { fetcher: auth, base: "/p" })).failure).toBe("auth");
     expect(auth).toHaveBeenCalledTimes(1);
   });
@@ -393,7 +393,7 @@ describe("getMandiPrices", () => {
   });
 
   it("never fetches without a proxy and never shows invented data", async () => {
-    const fetcher = vi.fn<Parameters<Fetcher>, ReturnType<Fetcher>>();
+    const fetcher = vi.fn<Fetcher>();
     const r = await getMandiPrices(VILLUPURAM_TOMATO, { fetcher, base: null });
     expect(r).toMatchObject({ status: "unavailable", failure: "no_proxy", records: [] });
     expect(fetcher).not.toHaveBeenCalled();
