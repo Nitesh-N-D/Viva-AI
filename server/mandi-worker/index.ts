@@ -3,6 +3,8 @@
  *
  *   GET  /prices        mandi prices (data.gov.in), src/server/mandiProxy.ts
  *   POST /ai/generate   Gemini farming assistant,   src/server/aiProxy.ts
+ *   GET  /weather       OpenWeatherMap (lat/lon),   src/server/weatherProxy.ts
+ *                       (secret: `wrangler secret put OPENWEATHER_API_KEY`)
  *
  * Firebase Hosting on the Spark plan cannot run server code, so the proxies
  * are deployed as one free-tier Cloudflare Worker and the app is built with
@@ -13,10 +15,18 @@
  */
 import { RateLimiter, TtlCache, CACHE_TTL_MS, handleMandiProxy } from "../../src/server/mandiProxy";
 import { AI_LIMITS, AI_RATE_PER_MINUTE, geminiModels, handleAiProxy } from "../../src/server/aiProxy";
+import {
+  WEATHER_CACHE_MS,
+  WEATHER_RATE_PER_MINUTE,
+  handleWeatherProxy,
+  type WeatherProxyBody,
+  type WeatherProxyResponse,
+} from "../../src/server/weatherProxy";
 import type { MandiProxyBody } from "../../src/lib/mandiQuery";
 
 interface Env {
   AGMARKNET_API_KEY?: string;
+  OPENWEATHER_API_KEY?: string;
   GEMINI_API_KEY?: string;
   GEMINI_MODEL?: string;
   /** Comma-separated list of origins allowed to call the proxy. */
@@ -27,6 +37,9 @@ interface Env {
 const cache = new TtlCache<MandiProxyBody>(CACHE_TTL_MS);
 const limiter = new RateLimiter();
 const aiLimiter = new RateLimiter(AI_RATE_PER_MINUTE);
+const weatherCache = new TtlCache<WeatherProxyBody>(WEATHER_CACHE_MS);
+const weatherLimiter = new RateLimiter(WEATHER_RATE_PER_MINUTE);
+const weatherInflight = new Map<string, Promise<WeatherProxyResponse>>();
 
 function corsHeaders(origin: string | null, env: Env): Record<string, string> {
   const allowed = (env.ALLOWED_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -61,6 +74,20 @@ export default {
         models: geminiModels(env as unknown as Record<string, string | undefined>),
         fetch: (u, init) => fetch(u, init),
         limiter: aiLimiter,
+      });
+      return new Response(JSON.stringify(r.body), { status: r.status, headers: { ...r.headers, ...cors } });
+    }
+
+    if (url.pathname === "/weather") {
+      if (request.method !== "GET") return json(405, { error: "bad_request" }, cors);
+      // Uses the shared OpenWeatherMap quota: only the app's own origins may use it.
+      if (!cors["access-control-allow-origin"]) return json(403, { error: "bad_request", detail: "origin not allowed" }, cors);
+      const r = await handleWeatherProxy(url.searchParams, client, {
+        apiKey: env.OPENWEATHER_API_KEY,
+        fetch: (u, init) => fetch(u, init),
+        cache: weatherCache,
+        limiter: weatherLimiter,
+        inflight: weatherInflight,
       });
       return new Response(JSON.stringify(r.body), { status: r.status, headers: { ...r.headers, ...cors } });
     }

@@ -1,9 +1,9 @@
 /**
  * lib/weather.ts
  *
- * OpenWeatherMap, called directly from the browser (free tier, no
- * backend). The key is visible in the bundle; restrict it by HTTP
- * referrer in the OpenWeatherMap dashboard.
+ * Weather from OpenWeatherMap through the app's server-side proxy
+ * (`${VITE_MANDI_PROXY_URL}/weather`, src/server/weatherProxy.ts). The
+ * OpenWeatherMap key is a Worker secret and never reaches the browser.
  *
  *  - Current conditions from /data/2.5/weather.
  *  - Rain outlook = sum of the 3-hourly `rain.3h` values from the 5-day
@@ -12,6 +12,8 @@
  *    There is no invented fallback weather.
  */
 import { fetchWithTimeout, readStored, writeStored } from "./http";
+import { mandiProxyBase } from "./mandi";
+import type { WeatherProxyBody } from "../server/weatherProxy";
 
 export type Season = "kharif" | "rabi" | "summer";
 
@@ -84,7 +86,6 @@ export function weatherErrorFor(status: number): WeatherError {
 const CACHE_PREFIX = "viva-ai:weather:v3:";
 const FRESH_MS = 30 * 60 * 1000;
 const TIMEOUT_MS = 8000;
-const API = "https://api.openweathermap.org/data/2.5";
 
 /** Tamil Nadu cropping seasons by calendar month. */
 export function seasonFor(date: Date): Season {
@@ -98,8 +99,31 @@ function cacheKey(q: WeatherQuery): string {
   return "lat" in q ? `${q.lat.toFixed(2)},${q.lng.toFixed(2)}` : `d:${q.district.toLowerCase()}`;
 }
 
-function locationParams(q: WeatherQuery): string {
-  return "lat" in q ? `lat=${q.lat}&lon=${q.lng}` : `q=${encodeURIComponent(`${q.district},IN`)}`;
+/** Rounded to ~1 km: matches the proxy's cache cell and avoids sending precise GPS. */
+function proxyParams(q: { lat: number; lng: number }): string {
+  return `lat=${q.lat.toFixed(2)}&lon=${q.lng.toFixed(2)}`;
+}
+
+/** Maps a weather-proxy error response to an app error. Pure; exported for tests. */
+export function proxyErrorFor(status: number, code: unknown): WeatherError {
+  switch (code) {
+    case "not_configured":
+      return "no_key";
+    case "invalid_key":
+    case "not_found":
+    case "server":
+    case "timeout":
+    case "bad_response":
+    case "network":
+      return code;
+    case "rate_limited":
+    case "upstream_rate_limited":
+      return "rate_limited";
+    case "bad_request":
+      return status === 403 ? "http" : "not_found";
+    default:
+      return weatherErrorFor(status);
+  }
 }
 
 function num(v: unknown): number | null {
@@ -200,33 +224,27 @@ export async function getWeather(q: WeatherQuery, opts: { force?: boolean } = {}
     return { ...cached, source: "cached" };
   }
 
-  const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
-  if (!apiKey) {
-    return cached ? { ...cached, source: "cached", error: "no_key" } : unavailable("no_key");
-  }
+  const fallback = (error: WeatherError): WeatherSnapshot => (cached ? { ...cached, source: "cached", error } : unavailable(error));
+
+  const base = mandiProxyBase();
+  if (!base) return fallback("no_key");
+  // The proxy looks weather up by coordinates only (name lookups are unreliable).
+  if (!("lat" in q)) return fallback("not_found");
 
   try {
-    const loc = locationParams(q);
-    const [curRes, fcRes] = await Promise.all([
-      fetchWithTimeout(`${API}/weather?${loc}&units=metric&appid=${apiKey}`, TIMEOUT_MS),
-      fetchWithTimeout(`${API}/forecast?${loc}&units=metric&appid=${apiKey}`, TIMEOUT_MS),
-    ]);
-    if (!curRes.ok) {
-      const error = weatherErrorFor(curRes.status);
-      return cached ? { ...cached, source: "cached", error } : unavailable(error);
-    }
-    const current = (await curRes.json().catch(() => null)) as OwmCurrent | null;
-    const forecast = fcRes.ok ? ((await fcRes.json().catch(() => null)) as OwmForecast | null) : null;
-    const snapshot = current && typeof current === "object" ? parseWeather(current, forecast, new Date()) : null;
+    const res = await fetchWithTimeout(`${base}/weather?${proxyParams(q)}`, TIMEOUT_MS);
+    const body = (await res.json().catch(() => null)) as (WeatherProxyBody & { error?: unknown }) | null;
+    if (!res.ok) return fallback(proxyErrorFor(res.status, body?.error));
+    const snapshot =
+      body && typeof body === "object" && body.current && typeof body.current === "object"
+        ? parseWeather(body.current as OwmCurrent, (body.forecast as OwmForecast | null) ?? null, new Date())
+        : null;
     // A 200 without a temperature is not usable weather: never cache or show it as live.
-    if (!snapshot || snapshot.tempC === null) {
-      return cached ? { ...cached, source: "cached", error: "bad_response" } : unavailable("bad_response");
-    }
+    if (!snapshot || snapshot.tempC === null) return fallback("bad_response");
     writeStored(key, snapshot);
     return snapshot;
   } catch (err) {
     console.warn("[weather] fetch failed", err);
-    const error: WeatherError = err instanceof Error && /timed out/.test(err.message) ? "timeout" : "network";
-    return cached ? { ...cached, source: "cached", error } : unavailable(error);
+    return fallback(err instanceof Error && /timed out/.test(err.message) ? "timeout" : "network");
   }
 }

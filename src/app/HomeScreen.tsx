@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useT } from "../i18n";
 import { locationLabel } from "./locationLabel";
+import { districtName } from "../domain/districts";
 import { taxonName } from "../domain/taxonomy";
 import { cropById, cropName, stageFor } from "../modules/farm/cropEngine";
 import { formatIsoDate, percent, relativeTime } from "../lib/format";
@@ -28,6 +29,9 @@ function WeatherCard() {
   const { weather, loading, refresh } = useWeather(location);
 
   if (!location) return null;
+  // OpenWeatherMap's station name is English only (and often a nearby town): show the
+  // saved district in the user's language; the station name only in English for GPS.
+  const place = location.district ? districtName(location.district, lang) : lang === "en" ? weather?.placeName ?? null : null;
   return (
     <Card
       title={t("home.weather")}
@@ -55,7 +59,7 @@ function WeatherCard() {
           )}
           <div className="flex items-center gap-2 flex-wrap text-xs text-soil-600">
             <SourceBadge source={weather.source} />
-            {weather.placeName && <span>{weather.placeName}</span>}
+            {place && <span>{place}</span>}
             {weather.fetchedAt && <span>· {t("common.updated", { time: relativeTime(weather.fetchedAt, lang) })}</span>}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

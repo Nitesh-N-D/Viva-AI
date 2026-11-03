@@ -5,6 +5,13 @@ import pkg from "./package.json";
 import { CACHE_TTL_MS, RateLimiter, TtlCache, handleMandiProxy } from "./src/server/mandiProxy";
 import type { MandiProxyBody } from "./src/lib/mandiQuery";
 import { AI_LIMITS, AI_RATE_PER_MINUTE, geminiKey, geminiModels, handleAiProxy } from "./src/server/aiProxy";
+import {
+  WEATHER_CACHE_MS,
+  WEATHER_RATE_PER_MINUTE,
+  handleWeatherProxy,
+  type WeatherProxyBody,
+  type WeatherProxyResponse,
+} from "./src/server/weatherProxy";
 
 /**
  * Server-side mandi key. AGMARKNET_API_KEY has no VITE_ prefix, so Vite never
@@ -85,6 +92,47 @@ function aiDevProxy(apiKey: string | undefined, models: string[]): Plugin {
   };
 }
 
+/**
+ * Server-side OpenWeatherMap key for the dev/preview weather proxy. A legacy
+ * VITE_OPENWEATHER_API_KEY in .env is still accepted here; client code no
+ * longer reads it, so Vite never inlines it.
+ */
+function weatherKey(env: Record<string, string>): string | undefined {
+  return env.OPENWEATHER_API_KEY || env.VITE_OPENWEATHER_API_KEY || undefined;
+}
+
+/** Serves GET /api-mandi/weather from the shared weather proxy handler in `vite` and `vite preview`. */
+function weatherDevProxy(apiKey: string | undefined): Plugin {
+  const cache = new TtlCache<WeatherProxyBody>(WEATHER_CACHE_MS);
+  const limiter = new RateLimiter(WEATHER_RATE_PER_MINUTE);
+  const inflight = new Map<string, Promise<WeatherProxyResponse>>();
+  const middleware = (req: import("http").IncomingMessage, res: import("http").ServerResponse, next: () => void) => {
+    const url = new URL(req.url ?? "/", "http://localhost");
+    if (url.pathname !== "/api-mandi/weather") return next();
+    handleWeatherProxy(url.searchParams, req.socket.remoteAddress ?? "local", {
+      apiKey,
+      fetch: (u, init) => fetch(u, init),
+      cache,
+      limiter,
+      inflight,
+    }).then(
+      (r) => {
+        res.writeHead(r.status, r.headers);
+        res.end(JSON.stringify(r.body));
+      },
+      () => {
+        res.writeHead(500, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "server" }));
+      }
+    );
+  };
+  return {
+    name: "viva-weather-proxy",
+    configureServer: (server) => void server.middlewares.use(middleware),
+    configurePreviewServer: (server) => void server.middlewares.use(middleware),
+  };
+}
+
 /** Fails the build if a server-only secret value ends up in any emitted file. */
 function forbidSecretsInBundle(secrets: (string | undefined)[]): Plugin {
   const values = secrets.filter((s): s is string => !!s && s.length >= 8);
@@ -107,6 +155,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const apiKey = mandiKey(env);
   const aiKey = geminiKey(env);
+  const owKey = weatherKey(env);
   return {
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
@@ -115,7 +164,8 @@ export default defineConfig(({ mode }) => {
     react(),
     mandiDevProxy(apiKey),
     aiDevProxy(aiKey, geminiModels(env)),
-    forbidSecretsInBundle([apiKey, aiKey]),
+    weatherDevProxy(owKey),
+    forbidSecretsInBundle([apiKey, aiKey, owKey]),
     VitePWA({
       // src/lib/appUpdate.ts registers /sw.js itself and asks before a new
       // release takes over open tabs (see src/sw.ts).

@@ -11,7 +11,7 @@ except Firebase, and each feature degrades with a clear message:
 | Variable | Used for |
 |---|---|
 | `VITE_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID` | Anonymous auth, scans, ratings |
-| `VITE_OPENWEATHER_API_KEY` | Weather |
+| `OPENWEATHER_API_KEY` (server-only, **no** `VITE_` prefix) | Weather: read by the Vite dev/preview proxy, and a Worker secret in production (`GET /weather?lat=&lon=`) |
 | `AGMARKNET_API_KEY` (server-only, **no** `VITE_` prefix) | Mandi prices: read by the Vite dev/preview proxy only |
 | `VITE_MANDI_PROXY_URL` | Production Worker base URL (the Cloudflare Worker below), used for mandi prices and AI. Not a secret |
 | `GEMINI_API_KEY` (server-only, **no** `VITE_` prefix), `GEMINI_MODEL` (optional) | Gemini assistant: read by the Vite dev/preview proxy, and a Worker secret in production |
@@ -69,6 +69,7 @@ redeploy:
 
 ```bash
 npx wrangler@4 secret put GEMINI_API_KEY --config server/mandi-worker/wrangler.toml
+npx wrangler@4 secret put OPENWEATHER_API_KEY --config server/mandi-worker/wrangler.toml
 npx wrangler@4 deploy --config server/mandi-worker/wrangler.toml
 ```
 
@@ -144,7 +145,6 @@ GitHub → Settings → Secrets and variables → Actions:
 |---|---|
 | `FIREBASE_SERVICE_ACCOUNT_VIVA_AI_2CC88` | Service-account JSON created by `firebase init hosting:github` |
 | `VITE_FIREBASE_API_KEY` … `VITE_FIREBASE_APP_ID` | The same values as `.env.local` |
-| `VITE_OPENWEATHER_API_KEY` | Optional |
 | `VITE_MANDI_PROXY_URL` | URL of the deployed mandi Worker (not a secret value, but kept with the others) |
 
 Delete the old `VITE_AGMARKNET_API_KEY` repository secret; the workflows no longer use it.

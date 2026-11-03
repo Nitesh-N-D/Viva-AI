@@ -43,7 +43,11 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL("index.html")));
 
 registerRoute(({ url }) => url.pathname.startsWith("/models/"), new NetworkFirst({ cacheName: "viva-model-cache", networkTimeoutSeconds: 8 }));
 // Second, network-level layer behind the app-level caches in lib/weather.ts.
-registerRoute(({ url }) => url.origin === "https://api.openweathermap.org", new NetworkFirst({ cacheName: "viva-weather-cache", networkTimeoutSeconds: 5 }));
+// Matches the weather proxy (Worker `/weather`, dev `/api-mandi/weather`); only 200s are cached.
+registerRoute(
+  ({ url }) => url.pathname === "/weather" || url.pathname === "/api-mandi/weather",
+  new NetworkFirst({ cacheName: "viva-weather-cache", networkTimeoutSeconds: 5 })
+);
 
 async function notifyStrings(): Promise<NotifyStrings | null> {
   try {

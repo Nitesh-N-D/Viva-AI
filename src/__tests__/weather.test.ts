@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { conditionKey, getWeather, groupDaily, parseWeather, seasonFor, weatherErrorFor } from "../lib/weather";
+import { conditionKey, getWeather, groupDaily, parseWeather, proxyErrorFor, seasonFor, weatherErrorFor } from "../lib/weather";
 import { weatherQueryFor } from "../app/useWeather";
 import { DISTRICT_HQ, TN_DISTRICTS } from "../domain/districts";
 import en from "../i18n/en.json";
@@ -67,10 +67,10 @@ describe("weather location query", () => {
   });
 });
 
-describe("getWeather", () => {
+describe("getWeather (through the weather proxy)", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.stubEnv("VITE_OPENWEATHER_API_KEY", "test-key");
+    vi.stubEnv("VITE_MANDI_PROXY_URL", "https://proxy.test");
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -82,39 +82,61 @@ describe("getWeather", () => {
     vi.stubGlobal("fetch", f);
     return f;
   };
+  const OK = { current: OK_CURRENT, forecast: OK_FORECAST, fetchedAt: 1 };
   const q = { lat: 11.94, lng: 79.49 };
 
-  it("returns live weather with feels-like and forecast, queried by lat/lon", async () => {
-    const f = stubFetch((url) => Promise.resolve(json(200, url.includes("/forecast") ? OK_FORECAST : OK_CURRENT)));
+  it("returns live weather with feels-like and forecast, via one proxy call by lat/lon", async () => {
+    const f = stubFetch(() => Promise.resolve(json(200, OK)));
     const w = await getWeather(q);
     expect(w).toMatchObject({ source: "live", tempC: 27.4, feelsLikeC: 31.2, humidity: 88, windKph: 11, conditionKey: "lightRain", rainNext5dMm: 2.5 });
     expect(w.daily).toHaveLength(1);
-    expect(f.mock.calls.every(([u]) => u.includes("lat=11.94&lon=79.49") && !u.includes("q="))).toBe(true);
+    expect(f).toHaveBeenCalledTimes(1);
+    expect(f.mock.calls[0][0]).toBe("https://proxy.test/weather?lat=11.94&lon=79.49");
   });
 
-  it("serves a fresh cache without calling the API again, labelled cached", async () => {
-    const f = stubFetch((url) => Promise.resolve(json(200, url.includes("/forecast") ? OK_FORECAST : OK_CURRENT)));
+  it("never calls OpenWeatherMap directly or sends a key", async () => {
+    const f = stubFetch(() => Promise.resolve(json(200, OK)));
+    await getWeather({ lat: 11.94123, lng: 79.48789 });
+    for (const [u] of f.mock.calls) {
+      expect(u).not.toMatch(/openweathermap|appid/);
+      expect(u).toMatch(/lat=11\.94&lon=79\.49$/); // rounded to ~1 km
+    }
+  });
+
+  it("serves a fresh cache without calling the proxy again, labelled cached", async () => {
+    const f = stubFetch(() => Promise.resolve(json(200, OK)));
     await getWeather(q);
     const again = await getWeather(q);
     expect(again.source).toBe("cached");
-    expect(f).toHaveBeenCalledTimes(2); // one current + one forecast, not four
+    expect(f).toHaveBeenCalledTimes(1);
   });
 
   it.each([
-    [401, "invalid_key"],
-    [404, "not_found"],
-    [429, "rate_limited"],
-    [503, "server"],
-    [418, "http"],
-  ] as const)("maps HTTP %i to %s and shows no invented weather", async (status, error) => {
-    stubFetch(() => Promise.resolve(json(status, { cod: status, message: "secret upstream text" })));
+    [502, "invalid_key", "invalid_key"],
+    [404, "not_found", "not_found"],
+    [429, "rate_limited", "rate_limited"],
+    [503, "upstream_rate_limited", "rate_limited"],
+    [502, "server", "server"],
+    [504, "timeout", "timeout"],
+    [502, "bad_response", "bad_response"],
+    [400, "bad_request", "not_found"],
+    [403, "bad_request", "http"],
+    [503, "not_configured", "no_key"],
+    [500, undefined, "server"],
+    [418, undefined, "http"],
+  ] as const)("maps proxy %i %s to %s and shows no invented weather", async (status, code, error) => {
+    stubFetch(() => Promise.resolve(json(status, code ? { error: code } : { message: "secret upstream text" })));
     const w = await getWeather(q);
     expect(w).toMatchObject({ source: "unavailable", error, tempC: null, feelsLikeC: null });
-    expect(weatherErrorFor(status)).toBe(error);
+    expect(proxyErrorFor(status, code)).toBe(error);
+  });
+
+  it("maps raw upstream statuses for completeness", () => {
+    expect([401, 403, 404, 429, 503, 418].map(weatherErrorFor)).toEqual(["invalid_key", "invalid_key", "not_found", "rate_limited", "server", "http"]);
   });
 
   it("rejects a malformed 200 and does not cache it", async () => {
-    stubFetch(() => Promise.resolve(json(200, { main: {} })));
+    stubFetch(() => Promise.resolve(json(200, { current: { main: {} } })));
     expect(await getWeather(q)).toMatchObject({ source: "unavailable", error: "bad_response" });
     stubFetch(() => Promise.resolve(new Response("<html>", { status: 200 })));
     expect(await getWeather(q, { force: true })).toMatchObject({ source: "unavailable", error: "bad_response" });
@@ -135,17 +157,24 @@ describe("getWeather", () => {
   });
 
   it("falls back to stale cache when offline, labelled cached with the reason", async () => {
-    stubFetch((url) => Promise.resolve(json(200, url.includes("/forecast") ? OK_FORECAST : OK_CURRENT)));
+    stubFetch(() => Promise.resolve(json(200, OK)));
     await getWeather(q);
     stubFetch(() => Promise.reject(new TypeError("Failed to fetch")));
     const w = await getWeather(q, { force: true });
     expect(w).toMatchObject({ source: "cached", error: "network", tempC: 27.4 });
   });
 
-  it("reports a missing key without calling the API", async () => {
-    vi.stubEnv("VITE_OPENWEATHER_API_KEY", "");
-    const f = stubFetch(() => Promise.resolve(json(200, OK_CURRENT)));
+  it("reports a missing proxy without calling anything", async () => {
+    vi.stubEnv("VITE_MANDI_PROXY_URL", "");
+    vi.stubEnv("DEV", false);
+    const f = stubFetch(() => Promise.resolve(json(200, OK)));
     expect(await getWeather(q)).toMatchObject({ source: "unavailable", error: "no_key" });
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("does not look weather up by name", async () => {
+    const f = stubFetch(() => Promise.resolve(json(200, OK)));
+    expect(await getWeather({ district: "Viluppuram" })).toMatchObject({ source: "unavailable", error: "not_found" });
     expect(f).not.toHaveBeenCalled();
   });
 });

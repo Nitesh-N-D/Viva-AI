@@ -393,7 +393,7 @@
   },
   "weather": {
     "error": {
-      "no_key": "Weather needs an OpenWeatherMap API key (VITE_OPENWEATHER_API_KEY).",
+      "no_key": "Weather is not set up on the server yet (OPENWEATHER_API_KEY).",
       "invalid_key": "The weather API key was rejected.",
       "not_found": "Weather is not available for this location.",
       "network": "Could not reach the weather service. Check your connection.",

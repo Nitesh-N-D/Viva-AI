@@ -393,7 +393,7 @@
   },
   "weather": {
     "error": {
-      "no_key": "வானிலைக்கு OpenWeatherMap API key (VITE_OPENWEATHER_API_KEY) தேவை.",
+      "no_key": "வானிலை சேவை சர்வரில் இன்னும் அமைக்கப்படவில்லை (OPENWEATHER_API_KEY).",
       "invalid_key": "வானிலை API key நிராகரிக்கப்பட்டது.",
       "not_found": "இந்த இடத்திற்கு வானிலை கிடைக்கவில்லை.",
       "network": "வானிலை சேவையை அடைய முடியவில்லை. இணைப்பைச் சரிபார்க்கவும்.",
