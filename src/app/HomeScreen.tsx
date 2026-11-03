@@ -39,17 +39,38 @@ function WeatherCard() {
     >
       {!weather && <Skeleton className="h-20" />}
       {weather && weather.source === "unavailable" && (
-        <Notice tone={weather.error === "no_key" ? "info" : "warning"}>{t(`weather.error.${weather.error ?? "network"}`)}</Notice>
+        <div className="flex flex-col gap-2 items-start">
+          <Notice tone={weather.error === "no_key" ? "info" : "warning"}>{t(`weather.error.${weather.error ?? "network"}`)}</Notice>
+          {weather.error !== "no_key" && (
+            <Button size="sm" variant="ghost" onClick={() => void refresh()} disabled={loading}>
+              {t("weather.retry")}
+            </Button>
+          )}
+        </div>
       )}
       {weather && weather.source !== "unavailable" && (
         <div className="flex flex-col gap-3">
+          {weather.error && (
+            <Notice tone="warning">{t("weather.staleNotice", { reason: t(`weather.error.${weather.error}`) })}</Notice>
+          )}
           <div className="flex items-center gap-2 flex-wrap text-xs text-soil-600">
             <SourceBadge source={weather.source} />
             {weather.placeName && <span>{weather.placeName}</span>}
             {weather.fetchedAt && <span>· {t("common.updated", { time: relativeTime(weather.fetchedAt, lang) })}</span>}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Stat label={t("home.temp")} value={weather.tempC !== null ? `${Math.round(weather.tempC)}°C` : "—"} hint={weather.condition ?? undefined} />
+            <Stat
+              label={t("home.temp")}
+              value={weather.tempC !== null ? `${Math.round(weather.tempC)}°C` : "—"}
+              hint={
+                [
+                  weather.conditionKey ? t(`weather.cond.${weather.conditionKey}`) : lang === "en" ? weather.condition : null,
+                  weather.feelsLikeC != null ? t("weather.feelsLike", { temp: `${Math.round(weather.feelsLikeC)}°C` }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || undefined
+              }
+            />
             <Stat label={t("home.humidity")} value={weather.humidity !== null ? `${weather.humidity}%` : "—"} />
             <Stat label={t("home.wind")} value={weather.windKph !== null ? `${Math.round(weather.windKph)} km/h` : "—"} />
             <Stat label={t("home.rain5d")} value={weather.rainNext5dMm !== null ? `${weather.rainNext5dMm} mm` : "—"} hint={t(`seasons.${weather.season}`)} />

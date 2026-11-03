@@ -20,6 +20,8 @@ export type WeatherQuery = { lat: number; lng: number } | { district: string };
 export interface WeatherSnapshot {
   placeName: string | null;
   tempC: number | null;
+  /** "Feels like" temperature, °C. */
+  feelsLikeC: number | null;
   humidity: number | null;
   /** Sum of forecast rain over the next ~5 days, mm. null when unknown. */
   rainNext5dMm: number | null;
@@ -27,6 +29,8 @@ export interface WeatherSnapshot {
   windKph: number | null;
   /** Short condition text from the provider (English), e.g. "light rain". */
   condition: string | null;
+  /** Translatable condition group (see conditionKey), null when unknown. */
+  conditionKey: ConditionKey | null;
   /** Up to 5 days of forecast, grouped by the provider's local date. */
   daily: DailyForecast[];
   season: Season;
@@ -43,7 +47,39 @@ export interface DailyForecast {
   rainMm: number;
 }
 
-export type WeatherError = "no_key" | "invalid_key" | "not_found" | "network" | "http";
+export type ConditionKey =
+  | "thunderstorm" | "drizzle" | "lightRain" | "rain" | "heavyRain" | "snow" | "haze" | "mist" | "fog"
+  | "clear" | "fewClouds" | "clouds" | "overcast";
+
+/** OpenWeatherMap condition id → translatable group (OWM has no Tamil). Pure; exported for tests. */
+export function conditionKey(id: unknown): ConditionKey | null {
+  if (typeof id !== "number" || !Number.isFinite(id)) return null;
+  if (id >= 200 && id < 300) return "thunderstorm";
+  if (id >= 300 && id < 400) return "drizzle";
+  if (id === 500 || id === 520) return "lightRain";
+  if (id === 501 || id === 521 || id === 511) return "rain";
+  if (id >= 502 && id < 600) return "heavyRain";
+  if (id >= 600 && id < 700) return "snow";
+  if (id === 701) return "mist";
+  if (id === 741) return "fog";
+  if (id >= 700 && id < 800) return "haze";
+  if (id === 800) return "clear";
+  if (id === 801 || id === 802) return "fewClouds";
+  if (id === 803) return "clouds";
+  if (id === 804) return "overcast";
+  return null;
+}
+
+export type WeatherError = "no_key" | "invalid_key" | "not_found" | "rate_limited" | "server" | "timeout" | "bad_response" | "network" | "http";
+
+/** Maps a non-OK OpenWeatherMap status to an app error. Pure; exported for tests. */
+export function weatherErrorFor(status: number): WeatherError {
+  if (status === 401 || status === 403) return "invalid_key";
+  if (status === 404) return "not_found";
+  if (status === 429) return "rate_limited";
+  if (status >= 500) return "server";
+  return "http";
+}
 
 const CACHE_PREFIX = "viva-ai:weather:v3:";
 const FRESH_MS = 30 * 60 * 1000;
@@ -72,9 +108,9 @@ function num(v: unknown): number | null {
 
 interface OwmCurrent {
   name?: unknown;
-  main?: { temp?: unknown; humidity?: unknown };
+  main?: { temp?: unknown; feels_like?: unknown; humidity?: unknown };
   wind?: { speed?: unknown };
-  weather?: { description?: unknown }[];
+  weather?: { id?: unknown; description?: unknown }[];
 }
 
 interface OwmForecastSlot {
@@ -125,11 +161,13 @@ export function parseWeather(current: OwmCurrent, forecast: OwmForecast | null, 
   return {
     placeName: typeof current.name === "string" && current.name ? current.name : null,
     tempC: num(current.main?.temp),
+    feelsLikeC: num(current.main?.feels_like),
     humidity: num(current.main?.humidity),
     rainNext5dMm: rain,
     // OWM metric units report m/s.
     windKph: wind === null ? null : Math.round(wind * 3.6),
     condition: typeof description === "string" && description ? description : null,
+    conditionKey: conditionKey(current.weather?.[0]?.id),
     daily: forecast && Array.isArray(forecast.list) ? groupDaily(forecast.list) : [],
     season: seasonFor(now),
     source: "live",
@@ -141,10 +179,12 @@ function unavailable(error: WeatherError): WeatherSnapshot {
   return {
     placeName: null,
     tempC: null,
+    feelsLikeC: null,
     humidity: null,
     rainNext5dMm: null,
     windKph: null,
     condition: null,
+    conditionKey: null,
     daily: [],
     season: seasonFor(new Date()),
     source: "unavailable",
@@ -172,16 +212,21 @@ export async function getWeather(q: WeatherQuery, opts: { force?: boolean } = {}
       fetchWithTimeout(`${API}/forecast?${loc}&units=metric&appid=${apiKey}`, TIMEOUT_MS),
     ]);
     if (!curRes.ok) {
-      const error: WeatherError = curRes.status === 401 ? "invalid_key" : curRes.status === 404 ? "not_found" : "http";
+      const error = weatherErrorFor(curRes.status);
       return cached ? { ...cached, source: "cached", error } : unavailable(error);
     }
-    const current = (await curRes.json()) as OwmCurrent;
-    const forecast = fcRes.ok ? ((await fcRes.json()) as OwmForecast) : null;
-    const snapshot = parseWeather(current, forecast, new Date());
+    const current = (await curRes.json().catch(() => null)) as OwmCurrent | null;
+    const forecast = fcRes.ok ? ((await fcRes.json().catch(() => null)) as OwmForecast | null) : null;
+    const snapshot = current && typeof current === "object" ? parseWeather(current, forecast, new Date()) : null;
+    // A 200 without a temperature is not usable weather: never cache or show it as live.
+    if (!snapshot || snapshot.tempC === null) {
+      return cached ? { ...cached, source: "cached", error: "bad_response" } : unavailable("bad_response");
+    }
     writeStored(key, snapshot);
     return snapshot;
   } catch (err) {
     console.warn("[weather] fetch failed", err);
-    return cached ? { ...cached, source: "cached", error: "network" } : unavailable("network");
+    const error: WeatherError = err instanceof Error && /timed out/.test(err.message) ? "timeout" : "network";
+    return cached ? { ...cached, source: "cached", error } : unavailable(error);
   }
 }

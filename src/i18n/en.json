@@ -397,7 +397,29 @@
       "invalid_key": "The weather API key was rejected.",
       "not_found": "Weather is not available for this location.",
       "network": "Could not reach the weather service. Check your connection.",
-      "http": "The weather service returned an error."
+      "http": "The weather service returned an error.",
+      "rate_limited": "The weather service is busy (request limit reached). Try again in a few minutes.",
+      "server": "The weather service is having problems. Try again later.",
+      "timeout": "The weather service took too long to answer. Try again.",
+      "bad_response": "The weather service sent incomplete data."
+    },
+    "staleNotice": "Showing saved weather. Live update failed: {reason}",
+    "retry": "Try again",
+    "feelsLike": "Feels like {temp}",
+    "cond": {
+      "thunderstorm": "Thunderstorm",
+      "drizzle": "Drizzle",
+      "lightRain": "Light rain",
+      "rain": "Rain",
+      "heavyRain": "Heavy rain",
+      "snow": "Snow",
+      "haze": "Haze",
+      "mist": "Mist",
+      "fog": "Fog",
+      "clear": "Clear sky",
+      "fewClouds": "Partly cloudy",
+      "clouds": "Cloudy",
+      "overcast": "Overcast"
     }
   },
   "voice": {

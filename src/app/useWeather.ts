@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { getWeather, type WeatherQuery, type WeatherSnapshot } from "../lib/weather";
+import { districtCoords } from "../domain/districts";
 import type { AppLocation } from "./store";
 
 export function weatherQueryFor(location: AppLocation | null): WeatherQuery | null {
   if (!location) return null;
   if (location.coords) return location.coords;
+  // Name lookups 404 for several districts (e.g. "Viluppuram"); use the HQ coordinates.
+  const hq = districtCoords(location.district);
+  if (hq) return hq;
   if (location.district) return { district: location.district };
   return null;
 }
