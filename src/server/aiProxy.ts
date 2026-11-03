@@ -211,7 +211,12 @@ export function cleanAnswer(raw: string): string {
 export function interpretGemini(status: number, body: GeminiBody | null, model: string): Attempt {
   // Our own request is validated before this point, so an upstream 400 is usually a model-specific
   // rejection (seen intermittently in production). Try the next model once instead of failing.
-  if (status === 400) return { ok: false, code: "bad_request", retry: "next_model", detail: "rejected by the AI service" };
+  if (status === 400) {
+    // Gemini's error.status is an enum name such as INVALID_ARGUMENT or FAILED_PRECONDITION:
+    // safe to pass on (no key, no prompt text) and it tells a one-off rejection from a config problem.
+    const reason = typeof body?.error?.status === "string" && /^[A-Z_]{3,40}$/.test(body.error.status) ? ` (${body.error.status})` : "";
+    return { ok: false, code: "bad_request", retry: "next_model", detail: `rejected by the AI service${reason}` };
+  }
   if (status === 401 || status === 403) return { ok: false, code: "upstream_auth", retry: "never" };
   if (status === 404) return { ok: false, code: "upstream_unavailable", retry: "next_model", detail: "model not available" };
   if (status === 429) {

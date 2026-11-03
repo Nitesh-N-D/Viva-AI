@@ -117,7 +117,10 @@ export default defineConfig(({ mode }) => {
     aiDevProxy(aiKey, geminiModels(env)),
     forbidSecretsInBundle([apiKey, aiKey]),
     VitePWA({
-      registerType: "autoUpdate",
+      // src/lib/appUpdate.ts registers /sw.js itself and asks before a new
+      // release takes over open tabs (see src/sw.ts).
+      registerType: "prompt",
+      injectRegister: false,
       includeAssets: [
         "favicon.ico",
         "icons/*.svg",

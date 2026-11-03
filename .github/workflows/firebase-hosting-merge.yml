@@ -33,6 +33,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      # Keep the live release's hashed chunks in this upload so tabs still
+      # running it can open other screens (see scripts/carry-forward-assets.mjs).
+      - if: env.HAS_SERVICE_ACCOUNT == 'true'
+        run: node scripts/carry-forward-assets.mjs https://viva-ai-2cc88.web.app dist
       - if: env.HAS_SERVICE_ACCOUNT == 'true'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

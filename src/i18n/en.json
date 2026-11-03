@@ -574,7 +574,7 @@
     "action_edit_input": "Please change what you entered and try again.",
     "action_contact": "Ask the person who set up this app to check the configuration.",
     "action_none": "Your saved data is safe.",
-    "chunkLoad": "This page could not be loaded. Check your connection and reload.",
+    "chunkLoad": "This screen belongs to an older version of the app and could not be loaded. Reload to get the latest version — your saved data is safe.",
     "reload": "Reload",
     "unexpected": "Something unexpected went wrong. Your data is safe.",
     "details": "Technical details",
@@ -582,7 +582,10 @@
     "imageTooLarge": "The image is too large (maximum {mb} MB).",
     "imageUnreadable": "This image could not be opened. Try another photo.",
     "modelLoad": "The model could not be loaded. Check your connection and try again, or choose manually below.",
-    "analyseFailed": "The photo could not be analysed. Please try again."
+    "analyseFailed": "The photo could not be analysed. Please try again.",
+    "chunkOffline": "You are offline and this screen has not been saved on this device yet. Connect to the internet and try again.",
+    "updateReady": "A new version of VIVA AI is ready.",
+    "updateNow": "Reload to update"
   },
   "ai": {
     "sectionTitle": "AI explanation",

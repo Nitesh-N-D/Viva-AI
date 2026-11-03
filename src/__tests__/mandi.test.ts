@@ -95,6 +95,7 @@ describe("mandi proxy handler", () => {
   const deps = (over: Partial<ProxyDeps> = {}): ProxyDeps => ({
     apiKey: "SECRET-KEY-123",
     fetch: vi.fn(async () => new Response(JSON.stringify({ total: 1, offset: "0", limit: "500", records: [raw()] }), { status: 200 })),
+    sleep: async () => {},
     ...over,
   });
   const qs = new URLSearchParams("state=Tamil+Nadu&district=Villupuram&commodity=Tomato");
@@ -142,6 +143,65 @@ describe("mandi proxy handler", () => {
     });
     expect(net.status).toBe(502);
     expect(JSON.stringify(net)).not.toContain("SECRET");
+  });
+
+  it("retries Cloudflare 521/523 and network refusals, then returns the real data", async () => {
+    const ok = () => new Response(JSON.stringify({ total: 1, offset: "0", limit: "500", records: [raw()] }), { status: 200 });
+    const sleeps: number[] = [];
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("", { status: 521 }))
+      .mockRejectedValueOnce(new Error("connection refused"))
+      .mockResolvedValueOnce(new Response("", { status: 523 }))
+      .mockResolvedValueOnce(ok());
+    const r = await handleMandiProxy(qs, "c", deps({ fetch, sleep: async (ms) => void sleeps.push(ms) }));
+    expect(r.status).toBe(200);
+    expect(fetch).toHaveBeenCalledTimes(4);
+    expect(sleeps).toEqual([300, 600, 1200]);
+  });
+
+  it("gives up after the last attempt with the upstream status, and never retries auth or 429", async () => {
+    const always523 = vi.fn(async () => new Response("", { status: 523 }));
+    const r = await handleMandiProxy(qs, "c", deps({ fetch: always523 }));
+    expect(always523).toHaveBeenCalledTimes(4);
+    expect(r).toMatchObject({ status: 502, body: { error: "upstream_error", detail: "upstream status 523" } });
+    const auth = vi.fn(async () => new Response("", { status: 403 }));
+    expect((await handleMandiProxy(qs, "c", deps({ fetch: auth }))).body).toEqual({ error: "upstream_auth" });
+    expect(auth).toHaveBeenCalledTimes(1);
+    const limited = vi.fn(async () => new Response("", { status: 429 }));
+    await handleMandiProxy(qs, "c", deps({ fetch: limited }));
+    expect(limited).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not start a retry that would overrun the time budget", async () => {
+    let t = 0;
+    const fetch = vi.fn(async () => {
+      t += 14_800; // one slow refusal leaves less than the 300 ms backoff of the 15 s budget
+      return new Response("", { status: 521 });
+    });
+    const r = await handleMandiProxy(qs, "c", deps({ fetch, now: () => t }));
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(r.status).toBe(502);
+  });
+
+  it("re-asks once after an empty 200 and never caches an empty answer", async () => {
+    const empty = () => new Response(JSON.stringify({ total: 0, offset: "0", limit: "500", records: [] }), { status: 200 });
+    const full = () => new Response(JSON.stringify({ total: 1, offset: "0", limit: "500", records: [raw()] }), { status: 200 });
+    // Spurious empty page, then the real data.
+    const flaky = vi.fn().mockResolvedValueOnce(empty()).mockResolvedValueOnce(full());
+    const cache = new TtlCache<never>(60_000);
+    const r1 = await handleMandiProxy(qs, "c", deps({ fetch: flaky, cache: cache as never }));
+    expect(flaky).toHaveBeenCalledTimes(2);
+    expect((r1.body as { records: unknown[] }).records).toHaveLength(1);
+    // Truly empty: still one re-ask only, answered with no-store and not cached.
+    const alwaysEmpty = vi.fn(async () => empty());
+    const c2 = new TtlCache<never>(60_000);
+    const r2 = await handleMandiProxy(qs, "c", deps({ fetch: alwaysEmpty, cache: c2 as never }));
+    expect(alwaysEmpty).toHaveBeenCalledTimes(2);
+    expect(r2.status).toBe(200);
+    expect(r2.headers["cache-control"]).toBe("no-store");
+    await handleMandiProxy(qs, "c", deps({ fetch: alwaysEmpty, cache: c2 as never }));
+    expect(alwaysEmpty).toHaveBeenCalledTimes(4);
   });
 
   it("times out a slow upstream", async () => {

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { t as translate, useT } from "./i18n";
 import { AppShell } from "./app/AppShell";
 import { HomeScreen } from "./app/HomeScreen";
@@ -9,24 +9,25 @@ import { Spinner } from "./shared/ui/Feedback";
 
 // Feature screens are split into their own chunks so the first load on a
 // slow rural connection only downloads the shell and dashboard.
-const ScanScreen = lazy(() => importWithRetry(() => import("./modules/farm/scan/ScanScreen").then((m) => ({ default: m.ScanScreen }))));
-const GuidanceScreen = lazy(() => importWithRetry(() => import("./modules/farm/guidance/GuidanceScreen").then((m) => ({ default: m.GuidanceScreen }))));
-const CropRecommend = lazy(() => importWithRetry(() => import("./modules/farm/crop-recommend/CropRecommend").then((m) => ({ default: m.CropRecommend }))));
-const MyCrop = lazy(() => importWithRetry(() => import("./modules/farm/my-crop/MyCrop").then((m) => ({ default: m.MyCrop }))));
-const MandiPrices = lazy(() => importWithRetry(() => import("./modules/farm/mandi-prices/MandiPrices").then((m) => ({ default: m.MandiPrices }))));
-const SoilMap = lazy(() => importWithRetry(() => import("./modules/farm/soil-map/SoilMap").then((m) => ({ default: m.SoilMap }))));
-const FabricationHome = lazy(() => importWithRetry(() => import("./modules/fabrication/FabricationHome").then((m) => ({ default: m.FabricationHome }))));
-const PlannerScreen = lazy(() => importWithRetry(() => import("./modules/planner/PlannerScreen").then((m) => ({ default: m.PlannerScreen }))));
-const FinanceScreen = lazy(() => importWithRetry(() => import("./modules/finance/FinanceScreen").then((m) => ({ default: m.FinanceScreen }))));
-const IrrigationScreen = lazy(() => importWithRetry(() => import("./modules/irrigation/IrrigationScreen").then((m) => ({ default: m.IrrigationScreen }))));
-const AssistantScreen = lazy(() => importWithRetry(() => import("./modules/assistant/AssistantScreen").then((m) => ({ default: m.AssistantScreen }))));
-const WatchlistScreen = lazy(() => importWithRetry(() => import("./modules/watchlist/WatchlistScreen").then((m) => ({ default: m.WatchlistScreen }))));
-import { importWithRetry, installGlobalErrorHandlers } from "./lib/errors";
+const ScanScreen = lazyWithRetry(() => import("./modules/farm/scan/ScanScreen").then((m) => m.ScanScreen));
+const GuidanceScreen = lazyWithRetry(() => import("./modules/farm/guidance/GuidanceScreen").then((m) => m.GuidanceScreen));
+const CropRecommend = lazyWithRetry(() => import("./modules/farm/crop-recommend/CropRecommend").then((m) => m.CropRecommend));
+const MyCrop = lazyWithRetry(() => import("./modules/farm/my-crop/MyCrop").then((m) => m.MyCrop));
+const MandiPrices = lazyWithRetry(() => import("./modules/farm/mandi-prices/MandiPrices").then((m) => m.MandiPrices));
+const SoilMap = lazyWithRetry(() => import("./modules/farm/soil-map/SoilMap").then((m) => m.SoilMap));
+const FabricationHome = lazyWithRetry(() => import("./modules/fabrication/FabricationHome").then((m) => m.FabricationHome));
+const PlannerScreen = lazyWithRetry(() => import("./modules/planner/PlannerScreen").then((m) => m.PlannerScreen));
+const FinanceScreen = lazyWithRetry(() => import("./modules/finance/FinanceScreen").then((m) => m.FinanceScreen));
+const IrrigationScreen = lazyWithRetry(() => import("./modules/irrigation/IrrigationScreen").then((m) => m.IrrigationScreen));
+const AssistantScreen = lazyWithRetry(() => import("./modules/assistant/AssistantScreen").then((m) => m.AssistantScreen));
+const WatchlistScreen = lazyWithRetry(() => import("./modules/watchlist/WatchlistScreen").then((m) => m.WatchlistScreen));
+import { installGlobalErrorHandlers, lazyWithRetry } from "./lib/errors";
 import { useTaskReminders } from "./modules/planner/useTaskReminders";
 import { ensureAnonymousAuth, isFirebaseConfigured, writeQueuedItem } from "./lib/firebase";
 import { registerAutoFlush } from "./shared/offline-sync/SyncQueue";
 import { ErrorBoundary } from "./shared/ui/ErrorBoundary";
 import { Toaster, toast } from "./shared/ui/Toast";
+import { UpdateBanner } from "./shared/ui/UpdateBanner";
 
 function RouteView({ route }: { route: Route }) {
   switch (route.name) {
@@ -108,6 +109,7 @@ export default function App() {
         </Suspense>
       </ErrorBoundary>
       <Toaster />
+      <UpdateBanner />
     </AppShell>
   );
 }

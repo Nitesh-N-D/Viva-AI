@@ -1,6 +1,7 @@
 import React from "react";
 import { t } from "../../i18n";
-import { isChunkLoadError, safeLog } from "../../lib/errors";
+import { recoverFromChunkError } from "../../lib/appUpdate";
+import { isChunkLoadError, resetFailedLazyScreens, safeLog } from "../../lib/errors";
 import { Button } from "./Button";
 
 interface Props {
@@ -27,21 +28,32 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prev: Props) {
-    if (this.state.error && prev.resetKey !== this.props.resetKey) this.setState({ error: null });
+    if (this.state.error && prev.resetKey !== this.props.resetKey) this.retry();
   }
+
+  /** Clears the error and lets failed lazy screens import again on the next render. */
+  retry = () => {
+    resetFailedLazyScreens();
+    this.setState({ error: null });
+  };
 
   render() {
     const { error } = this.state;
     if (!error) return this.props.children;
-    // A missing code chunk cannot be fixed by re-rendering: offer a reload.
+    // A missing code chunk usually means this tab runs an older release:
+    // offer a reload that first activates the waiting service worker.
+    // Offline, a reload cannot help, so say so and offer a plain retry
+    // (lazyWithRetry starts a fresh import on the next render).
     const chunk = isChunkLoadError(error);
+    const offline = chunk && typeof navigator !== "undefined" && navigator.onLine === false;
+    const body = offline ? t("errors.chunkOffline") : chunk ? t("errors.chunkLoad") : t("common.errorBody");
     return (
       <div role="alert" className="flex flex-col items-center gap-3 text-center py-12 px-4">
         <p className="text-4xl" aria-hidden="true">
           ⚠
         </p>
         <h2 className="font-display font-bold text-lg">{t("common.errorTitle")}</h2>
-        <p className="text-sm text-soil-600 max-w-sm">{chunk ? t("errors.chunkLoad") : t("common.errorBody")}</p>
+        <p className="text-sm text-soil-600 max-w-sm">{body}</p>
         {error.message && (
           <details className="text-xs text-soil-500 max-w-sm" data-no-read>
             <summary className="cursor-pointer">{t("errors.details")}</summary>
@@ -49,10 +61,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
           </details>
         )}
         <div className="flex gap-2">
-          {chunk ? (
-            <Button onClick={() => window.location.reload()}>{t("errors.reload")}</Button>
+          {chunk && !offline ? (
+            <Button onClick={() => void recoverFromChunkError({ force: true })}>{t("errors.reload")}</Button>
           ) : (
-            <Button variant="secondary" onClick={() => this.setState({ error: null })}>
+            <Button variant="secondary" onClick={this.retry}>
               {t("common.retry")}
             </Button>
           )}

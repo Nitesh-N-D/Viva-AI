@@ -5,7 +5,9 @@
  * with a Tamil/English message and a recovery action (errors.* in i18n).
  * Nothing here logs request bodies, URLs with keys, or tokens.
  */
+import React from "react";
 import { t, type Lang } from "../i18n";
+import { recoverFromChunkError } from "./appUpdate";
 
 export type ErrorKind =
   | "offline"
@@ -145,32 +147,74 @@ export function installGlobalErrorHandlers(onError?: (e: AppError) => void): voi
  */
 export function isChunkLoadError(err: unknown): boolean {
   const msg = err instanceof Error ? `${err.name} ${err.message}` : String(err ?? "");
-  return /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed/i.test(msg);
+  return /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|error loading dynamically imported module|Importing a module script failed|Unable to preload CSS|is not a valid JavaScript MIME type/i.test(msg);
 }
 
 /**
- * Wraps a dynamic import: retries once after a short pause, then (once per
- * session) reloads the page so a fresh index.html points at the new chunks.
- * If it still fails, the error propagates to the ErrorBoundary.
+ * Wraps a dynamic import: retries once after a short pause, then asks
+ * `recover` (default: lib/appUpdate recoverFromChunkError, which activates a
+ * waiting service worker and reloads, at most once a minute and never
+ * offline). If no reload happens the error propagates to the ErrorBoundary.
  */
-export function importWithRetry<T>(load: () => Promise<T>, opts: { delayMs?: number; reload?: () => void } = {}): Promise<T> {
-  const { delayMs = 800, reload = () => window.location.reload() } = opts;
+export function importWithRetry<T>(
+  load: () => Promise<T>,
+  opts: { delayMs?: number; recover?: () => Promise<boolean> | boolean } = {},
+): Promise<T> {
+  const { delayMs = 800 } = opts;
   return load().catch(async (err) => {
     if (!isChunkLoadError(err)) throw err;
     await new Promise((r) => setTimeout(r, delayMs));
     try {
       return await load();
     } catch (err2) {
-      const KEY = "viva-ai:chunk-reload";
-      let already = false;
+      const recover = opts.recover ?? (() => recoverFromChunkError());
+      let reloading = false;
       try {
-        already = sessionStorage.getItem(KEY) === "1";
-        if (!already) sessionStorage.setItem(KEY, "1");
+        reloading = await recover();
       } catch {
-        already = true; // no storage: never risk a reload loop
+        reloading = false;
       }
-      if (!already && typeof navigator !== "undefined" && navigator.onLine !== false) reload();
+      // While the page reloads keep the spinner up instead of flashing the error screen.
+      if (reloading) return new Promise<T>(() => undefined);
       throw err2;
     }
   });
+}
+
+/**
+ * React.lazy remembers a rejected import for good, so one failed chunk would
+ * break that screen until a full reload. Each lazyWithRetry screen remembers
+ * that it failed; resetFailedLazyScreens() (called by the ErrorBoundary when
+ * it is reset: Retry, or a route change) gives it a fresh lazy component so
+ * the next render tries the import again. The swap is deliberately not done
+ * inside the rejection itself: React re-renders once after an error, and a
+ * fresh import there would retry forever instead of showing the error screen.
+ */
+const failedLazies = new Set<() => void>();
+
+export function resetFailedLazyScreens(): void {
+  const resets = [...failedLazies];
+  failedLazies.clear();
+  resets.forEach((r) => r());
+}
+
+export function lazyWithRetry<P extends object>(load: () => Promise<React.ComponentType<P>>): React.ComponentType<P> {
+  const reset = () => {
+    current = make();
+  };
+  const make = () =>
+    React.lazy(() =>
+      importWithRetry(load).then(
+        (C) => ({ default: C }),
+        (e) => {
+          failedLazies.add(reset);
+          throw e;
+        },
+      ),
+    );
+  let current = make();
+  function LazyWithRetry(props: P) {
+    return React.createElement(current as unknown as React.ComponentType<object>, props);
+  }
+  return LazyWithRetry;
 }

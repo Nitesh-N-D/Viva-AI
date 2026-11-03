@@ -122,8 +122,9 @@ export function CropRecommend({ soil: routeSoil }: { soil: string | null }) {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="font-display font-extrabold text-2xl text-leaf-800">{r.score}</p>
-                  <p className="text-[11px] text-soil-500">/100</p>
+                  <span className="sr-only">{t("cropRecommend.score", { score: r.score })}</span>
+                  <p className="font-display font-extrabold text-2xl text-leaf-800" aria-hidden="true">{r.score}</p>
+                  <p className="text-[11px] text-soil-500" aria-hidden="true">/100</p>
                 </div>
               </div>
               <div className="h-2 rounded-full bg-soil-100 overflow-hidden my-3" aria-hidden="true">

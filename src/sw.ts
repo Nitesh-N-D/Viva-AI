@@ -29,7 +29,13 @@ import {
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: (string | { url: string; revision: string | null })[] };
 
-self.skipWaiting();
+// A new release waits until the page asks for it (lib/appUpdate.ts sends
+// SKIP_WAITING when the user reloads to update or a chunk is missing).
+// Taking over open tabs automatically used to delete the precached chunks
+// their older app shell still needed ("Failed to fetch dynamically imported module").
+self.addEventListener("message", (event) => {
+  if ((event.data as { type?: string } | null)?.type === "SKIP_WAITING") void self.skipWaiting();
+});
 clientsClaim();
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
